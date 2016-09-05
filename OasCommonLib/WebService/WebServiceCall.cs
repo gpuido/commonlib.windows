@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OasCommonLib.Data;
 using OasCommonLib.Helpers;
 using OasCommonLib.Logger;
@@ -35,7 +36,7 @@ namespace OasCommonLib.WebService
         public static bool Ping(string testUrl, out ServerInfo serverInfo)
         {
             bool result = false;
-            string fullResponse;
+            string responsebody;
             string url;
 
             Dictionary<string, object> postParameters = new Dictionary<string, object>();
@@ -68,7 +69,7 @@ namespace OasCommonLib.WebService
                     // Process response
                     using (StreamReader responseReader = new StreamReader(webResponse.GetResponseStream()))
                     {
-                        fullResponse = responseReader.ReadToEnd();
+                        responsebody = responseReader.ReadToEnd();
                     }
                 }
             }
@@ -76,20 +77,20 @@ namespace OasCommonLib.WebService
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 _log.AddError(TAG, ex, "'Ping'");
-                fullResponse = WebServiceCall.ErrorResponse(ex);
+                responsebody = WebServiceCall.ErrorResponse(ex);
                 LastError = "ping failed";
             }
 
             try
             {
-                JObject jObj = JObject.Parse(fullResponse);
+                JObject jObj = JObject.Parse(responsebody);
 
                 if (null != jObj["_d"])
                 {
                     string encodedResponse = jObj["_d"].Value<string>();
-                    string response = CoderHelper.Decode(encodedResponse);
+                    responsebody = CoderHelper.Decode(encodedResponse);
 
-                    jObj = JObject.Parse(response);
+                    jObj = JObject.Parse(responsebody);
                 }
 
                 if (null != jObj["result"])
@@ -175,9 +176,9 @@ namespace OasCommonLib.WebService
             if (null != jObj["_d"])
             {
                 string encodedResponse = jObj["_d"].Value<string>();
-                string response = CoderHelper.Decode(encodedResponse);
+                responsebody = CoderHelper.Decode(encodedResponse);
 
-                jObj = JObject.Parse(response);
+                jObj = JObject.Parse(responsebody);
             }
 
             if (null != jObj["error"])
@@ -262,9 +263,9 @@ namespace OasCommonLib.WebService
             if (null != jObj["_d"])
             {
                 string encodedResponse = jObj["_d"].Value<string>();
-                string response = CoderHelper.Decode(encodedResponse);
+                responsebody = CoderHelper.Decode(encodedResponse);
 
-                jObj = JObject.Parse(response);
+                jObj = JObject.Parse(responsebody);
             }
 
             if (null != jObj["error"])
@@ -290,7 +291,7 @@ namespace OasCommonLib.WebService
             string edmundsApiKey = "cbaqfbt2kvb2xpcjwsv99h3q";
             string getUrl = string.Format(url, vin, edmundsApiKey);
 
-            LastError = "";
+            LastError = string.Empty;
             vinInfo = null;
 
             try
@@ -407,6 +408,13 @@ namespace OasCommonLib.WebService
                 _log.AddError(TAG, ex);
             }
 
+            JToken jObj = JObject.Parse(responsebody);
+            if (null != jObj["_d"])
+            {
+                string encodedResponse = jObj["_d"].Value<string>();
+                responsebody = CoderHelper.Decode(encodedResponse);
+            }
+
             OasJsonVinParser parser = new OasJsonVinParser(vin);
             vinInfo = parser.Parse(responsebody);
 
@@ -475,6 +483,14 @@ namespace OasCommonLib.WebService
             }
 
             JObject jObj = JObject.Parse(responsebody);
+
+            if (null != jObj["_d"])
+            {
+                string encodedResponse = jObj["_d"].Value<string>();
+                responsebody = CoderHelper.Decode(encodedResponse);
+
+                jObj = JObject.Parse(responsebody);
+            }
 
             if (null != jObj["error"])
             {
@@ -548,6 +564,14 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
+            if (null != jObj["_d"])
+            {
+                string encodedResponse = jObj["_d"].Value<string>();
+                responsebody = CoderHelper.Decode(encodedResponse);
+
+                jObj = JObject.Parse(responsebody);
+            }
+
             if (null != jObj["error"])
             {
                 LastError = jObj["error"].Value<string>();
@@ -617,6 +641,14 @@ namespace OasCommonLib.WebService
             {
                 JObject jObj = JObject.Parse(responsebody);
 
+                if (null != jObj["_d"])
+                {
+                    string encodedResponse = jObj["_d"].Value<string>();
+                    responsebody = CoderHelper.Decode(encodedResponse);
+
+                    jObj = JObject.Parse(responsebody);
+                }
+
                 if (null != jObj["error"])
                 {
                     LastError = jObj["error"].Value<string>();
@@ -645,8 +677,174 @@ namespace OasCommonLib.WebService
 
             return res;
         }
-
         #endregion
+
+        #region download data files
+        public static bool DownloadPrecondition(long envelopeId, long precNumber, string imageName, string detailImageName)
+        {
+            Debug.Assert(envelopeId > 0);
+            //
+            // todo: call directly download 'dp'
+            //
+            return DownloadAdditionalInfoImage(-envelopeId, precNumber, imageName, detailImageName);
+        }
+
+        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbRef, string imageName, string filePath, string downloadAction = "dl")
+        {
+            bool res = false;
+            string downloadUrl;
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            string DataServiceUrl = _cfg.DataServiceUrl;
+
+            //
+            // todo: uncomment after DownloadPrecondition will be revuild
+            //
+            //Debug.Assert(envelopeId > 0);
+
+
+            if (!DataServiceUrl.EndsWith("/"))
+            {
+                DataServiceUrl += "/";
+            }
+
+            LastError = string.Empty;
+            string requestParameters;
+            if (dbRef > -1L)
+            {
+                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + dbRef.ToString() + "/" + imageName;
+            }
+            else
+            {
+                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + imageName;
+            }
+
+#if UNDECODED
+            downloadUrl = DataServiceUrl + requestParameters;
+
+#else
+            downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
+#endif
+
+            try
+            {
+                using (WebClient wc = new WebClient())
+                {
+                    wc.DownloadFile(downloadUrl, filePath);
+                }
+
+                if (File.Exists(filePath) && FileHelper.Length(filePath) < FileHelper.MinimalLength)
+                {
+                    string text = File.ReadAllText(filePath);
+                    string error = "";
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        JObject jObj = JObject.Parse(text);
+
+                        if (null != jObj["_d"])
+                        {
+                            string encodedResponse = jObj["_d"].Value<string>();
+                            text = CoderHelper.Decode(encodedResponse);
+
+                            jObj = JObject.Parse(text);
+                        }
+                        error = (string)jObj["error"].Value<string>();
+                    }
+
+                    if (null != error)
+                    {
+                        LastError = string.Format("file '{0}' download error", downloadUrl);
+                        _log.Add(TAG, LastError, LogItemType.Error);
+                        return res;
+                    }
+                }
+
+                res = true;
+            }
+            catch (JsonException jre)
+            {
+                _log.AddError(TAG, jre);
+                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
+            }
+            catch (Exception ex)
+            {
+                LastError = ex.Message;
+                _log.AddError(
+                            TAG,
+                            ex,
+                            string.Format("file '{0}' download error", downloadUrl));
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+            }
+            return res;
+        }
+
+        public static bool DownloadAudio(long envelopeId, string audioName, string caseAudioName)
+        {
+            bool res = false;
+            string downloadUrl;
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            string DataServiceUrl = _cfg.DataServiceUrl;
+
+            if (!DataServiceUrl.EndsWith("/"))
+            {
+                DataServiceUrl += "/";
+            }
+
+            LastError = "";
+            string requestParameters = "da/" + envelopeId.ToString() + "/" + audioName;
+
+#if UNDECODED
+            downloadUrl = DataServiceUrl + requestParameters;
+#else
+            downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
+#endif
+
+            try
+            {
+                using (WebClient wc = new WebClient())
+                {
+                    wc.DownloadFile(downloadUrl, caseAudioName);
+                }
+
+                if (File.Exists(caseAudioName) && FileHelper.Length(caseAudioName) < FileHelper.MinimalLength)
+                {
+                    string text = File.ReadAllText(caseAudioName);
+                    JObject jObj = JObject.Parse(text);
+
+                    if (null != jObj["_d"])
+                    {
+                        string encodedResponse = jObj["_d"].Value<string>();
+                        text = CoderHelper.Decode(encodedResponse);
+
+                        jObj = JObject.Parse(text);
+                    }
+
+                    JObject error = (JObject)jObj["error"];
+
+                    if (null != error)
+                    {
+                        throw new Exception("server download failed : " + error.Value<string>());
+                    }
+                }
+
+                res = true;
+            }
+            catch (JsonException jre)
+            {
+                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
+                _log.AddError(TAG, jre);
+            }
+            catch (Exception ex)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = ex.Message;
+                _log.AddError(
+                            TAG,
+                            ex,
+                            string.Format("file '{0}' download error", downloadUrl));
+            }
+            return res;
+        }
+#endregion
 
         public static string ErrorResponse(Exception ex)
         {

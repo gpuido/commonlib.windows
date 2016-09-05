@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\EstVisCaseProxy\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\EstVis\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NUnrar, Version=1.0.1.0, Culture=neutral, PublicKeyToken=07e9cc01f0cd8860, processorArchitecture=MSIL">
@@ -80,6 +80,7 @@
     <Compile Include="VinParsers\NHTSAJsonVinParser.cs" />
     <Compile Include="VinParsers\OasJsonVinParser.cs" />
     <Compile Include="VinParsers\VinInfo.cs" />
+    <Compile Include="WebService\EncodedParameterHelper.cs" />
     <Compile Include="WebService\FormUpload.cs" />
     <Compile Include="WebService\WebClientEx.cs">
       <SubType>Component</SubType>
