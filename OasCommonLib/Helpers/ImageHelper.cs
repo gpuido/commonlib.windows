@@ -14,7 +14,12 @@
 
         public static string ImageFolder()
         {
-            return _cfg.ImagePath;
+            var folder = _cfg.ImagePath;
+            if (!Directory.Exists(folder))
+            {
+                FileHelper.CreateDirectoryRecursively(folder);
+            }
+            return folder;
         }
 
         public static string CaseImagePath(string imageName)
@@ -43,9 +48,26 @@
             return !(fileExists && fileHasCorrectSize);
         }
 
-        public static bool IsAudioMissing(string audioName)
+        public static string AudioFolder(long envelopeId)
         {
-            string audioPath = Path.Combine(_cfg.CaseAudioPath, audioName);
+            var folder = Path.Combine(_cfg.CaseAudioPath, envelopeId.ToString());
+            if (!Directory.Exists(folder))
+            {
+                FileHelper.CreateDirectoryRecursively(folder);
+            }
+
+            return folder;
+        }
+
+        public static string AudioPath(long envelopeId, string audioName)
+        {
+            var folder = Path.Combine(_cfg.CaseAudioPath, envelopeId.ToString());
+            return Path.Combine(folder, audioName);                
+        }
+
+        public static bool IsAudioMissing(long envelopeId, string audioName)
+        {
+            string audioPath = AudioPath(envelopeId, audioName);
             bool fileExists = File.Exists(audioPath);
             bool fileHasCorrectSize = FileHelper.Length(audioPath) > FileHelper.MinimalLength;
             return !(fileExists && fileHasCorrectSize);
