@@ -7,11 +7,6 @@
     {
         private static readonly OasConfig _cfg = OasConfig.Instance;
 
-        public static string CaseImageFolder()
-        {
-            return _cfg.CaseImagePath;
-        }
-
         public static string ImageFolder()
         {
             var folder = _cfg.ImagePath;
@@ -22,27 +17,37 @@
             return folder;
         }
 
-        public static string CaseImagePath(string imageName)
-        {
-            return Path.Combine(CaseImageFolder(), imageName);
-        }
-
         public static string ImagePath(string imageName)
         {
             return Path.Combine(ImageFolder(), imageName);
         }
 
-        public static bool IsCaseImageMissing(string imageName)
+        public static bool IsImageMissing(string imageName)
         {
-            var imagePath = CaseImagePath(imageName);
+            var imagePath = ImagePath(imageName);
             bool fileExists = File.Exists(imagePath);
             bool fileHasCorrectSize = FileHelper.Length(imagePath) > FileHelper.MinimalLength;
             return !(fileExists && fileHasCorrectSize);
         }
 
-        public static bool IsImageMissing(string imageName)
+        public static string CaseImageFolder(long envelopeId)
         {
-            var imagePath = ImagePath(imageName);
+            var folder = Path.Combine(_cfg.CaseImagePath, envelopeId.ToString());
+            if (!Directory.Exists(folder))
+            {
+                FileHelper.CreateDirectoryRecursively(folder);
+            }
+            return folder;
+        }
+        public static string CaseImagePath(long envelopeId, string imageName)
+        {
+            return Path.Combine(CaseImageFolder(envelopeId), imageName);
+        }
+
+
+        public static bool IsCaseImageMissing(long envelopeId, string imageName)
+        {
+            var imagePath = CaseImagePath(envelopeId, imageName);
             bool fileExists = File.Exists(imagePath);
             bool fileHasCorrectSize = FileHelper.Length(imagePath) > FileHelper.MinimalLength;
             return !(fileExists && fileHasCorrectSize);
