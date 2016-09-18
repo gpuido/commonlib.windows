@@ -32,7 +32,10 @@
         RefreshImagesOnUSB, RemoveOldCasesOnUsb,
 
         // file uploaded/deleted
-        FileUploaded, FileDeleted
+        FileUploaded, FileDeleted,
+
+        // add file in uypload queue
+        UploadFile, AddFileToUpload
     };
 
     public sealed class OasEventArgs : EventArgs

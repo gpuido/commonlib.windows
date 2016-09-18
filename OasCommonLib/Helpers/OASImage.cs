@@ -6,6 +6,7 @@
     using System.IO;
     using Logger;
     using Config;
+
     public class OASImage
     {
         public string Folder { get; private set; }
@@ -143,43 +144,37 @@
             return imageList;
         }
 
-        //public static int RemoveUnusedImages(List<string> cases, string path, string exts)
-        //{
-        //    int removedImages = 0;
-        //    var imageList = GetImageList(path, exts).Select(x => new CaseImage(Path.GetFileName(x.FullName))).ToList();
+        public static int RemoveUnusedImages(long envelopeId, string caseName)
+        {
+            int removedImages = 0;
 
-        //    if (null == cases)
-        //    {
-        //        return removedImages;
-        //    }
+            var caseFolder = ImageHelper.CaseImageFolder(envelopeId);
+            var imageList = GetImageList(caseFolder, _cfg.ImageExts).Select(x => new CaseImage(Path.GetFileName(x.FullName))).ToList();
+            foreach (var il in imageList)
+            {
+                if (il.Image.StartsWith(caseName))
+                {
+                    il.Found = true;
+                }
+            }
 
-        //    foreach (var il in imageList)
-        //    {
-        //        foreach (var c in cases)
-        //        {
-        //            if (il.Image.StartsWith(c))
-        //            {
-        //                il.Found = true;
-        //            }
-        //        }
-        //    }
 
-        //    foreach (var il in imageList)
-        //    {
-        //        if (!il.Found)
-        //        {
-        //            if (FileHelper.DeleteFile(ImageHelper.CaseImagePath(_cfg.CaseImagePath, il.Image)))
-        //            {
-        //                ++removedImages;
-        //            }
-        //            else
-        //            {
-        //                _log.Add(TAG, FileHelper.Error);
-        //            }
-        //        }
-        //    }
+            foreach (var il in imageList)
+            {
+                if (!il.Found)
+                {
+                    if (FileHelper.DeleteFile(ImageHelper.CaseImagePath(envelopeId, il.Image)))
+                    {
+                        ++removedImages;
+                    }
+                    else
+                    {
+                        _log.Add(TAG, FileHelper.Error);
+                    }
+                }
+            }
 
-        //    return removedImages;
-        //}
+            return removedImages;
+        }
     }
 }

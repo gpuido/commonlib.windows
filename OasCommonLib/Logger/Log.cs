@@ -51,8 +51,8 @@
 
         private static readonly OasConfig _cfg = OasConfig.Instance;
 
-        public List<LogItem> LogItemList { get; private set; }
-        Timer timer;
+        public readonly List<LogItem> LogItemList = new List<LogItem>();
+        private readonly Timer timer;
 
         public string LogFileName { get; private set; }
 
@@ -89,8 +89,6 @@
 
         public LogQueue()
         {
-            LogItemList = new List<LogItem>();
-
             _elapseTimerMin = 5;
 
             timer = new Timer(_elapseTimerMin * 60000); // once in a minute
@@ -114,7 +112,6 @@
         {
             timer.Elapsed -= timer_Elapsed;
             timer.Enabled = false;
-            timer = null;
 
             FlushLog();
             Debug.WriteLine("Log was disposed");

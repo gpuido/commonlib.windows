@@ -130,6 +130,182 @@ namespace OasCommonLib.WebService
             return result;
         }
 
+        #region images
+        public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, out long uploadedId)
+        {
+            bool res = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+            int uploadedSize = 0;
+            string uploadType = "upload_image";
+            string fileName = Path.GetFileName(pathToFile);
+
+            Debug.Assert(envelopeId > 0);
+
+            LastError = "";
+            uploadedId = 0L;
+
+            switch (infoType)
+            {
+                case InfoTypeEnum.AiDetail:
+                    uploadType = "upload_image";
+                    break;
+                case InfoTypeEnum.Precondition:
+                    envelopeId = -1 * Math.Abs(envelopeId);
+                    uploadType = "upload_image";
+                    break;
+                case InfoTypeEnum.Supplement:
+                    uploadType = "upload_suppliment";
+                    dbReference = 0L;
+                    break;
+                case InfoTypeEnum.AudioNote:
+                    uploadType = "upload_audio";
+                    dbReference = 0L;
+                    break;
+                default:
+                    Debug.Fail("unsupported upload type");
+                    break;
+            }
+
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   string.Format("no session info found in 'upload_image'"),
+                   LogItemType.Error);
+
+                return res;
+            }
+
+            if (!File.Exists(pathToFile) || FileHelper.Length(pathToFile) < FileHelper.MinimalLength)
+            {
+                LastError = string.Format("file '{0}' doesn't exist", pathToFile);
+                return res;
+            }
+
+            var nvc = new NameValueCollection();
+            nvc.Add("action", uploadType);
+            nvc.Add("client", ClientInfo);
+            nvc.Add("envelope_id", envelopeId.ToString());
+            nvc.Add("filename", fileName);
+            if (dbReference > 0)
+            {
+                nvc.Add("db_reference", dbReference.ToString());
+            }
+
+            string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
+            request.ContentType = "multipart/form-data; boundary=" + boundary;
+            request.Method = "POST";
+            request.KeepAlive = true;
+            request.Credentials = CredentialCache.DefaultCredentials;
+
+            if (request.CookieContainer == null)
+            {
+                request.CookieContainer = new CookieContainer();
+            }
+
+            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
+            request.CookieContainer.Add(cc);
+
+            using (Stream rs = request.GetRequestStream())
+            {
+                string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
+                foreach (string key in nvc.Keys)
+                {
+                    rs.Write(boundarybytes, 0, boundarybytes.Length);
+                    string formitem = string.Format(formdataTemplate, key, nvc[key]);
+                    byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
+                    rs.Write(formitembytes, 0, formitembytes.Length);
+                }
+                rs.Write(boundarybytes, 0, boundarybytes.Length);
+
+                string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                string header = string.Format(headerTemplate, "file", fileName, "application/octet-stream");
+                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
+                rs.Write(headerbytes, 0, headerbytes.Length);
+                using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
+                {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead = 0;
+                    while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
+                    {
+                        rs.Write(buffer, 0, bytesRead);
+                    }
+                    fileStream.Close();
+                }
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                rs.Write(trailer, 0, trailer.Length);
+                rs.Close();
+            }
+
+            try
+            {
+                using (WebResponse wresp = request.GetResponse())
+                {
+                    using (Stream stream2 = wresp.GetResponseStream())
+                    {
+                        using (StreamReader reader2 = new StreamReader(stream2))
+                        {
+                            responsebody = reader2.ReadToEnd();
+                            reader2.Close();
+                        }
+                        stream2.Close();
+                    }
+                    wresp.Close();
+                }
+
+                JObject jObj = JObject.Parse(responsebody);
+
+                if (null != jObj["error"])
+                {
+                    LastError = jObj["error"].Value<string>();
+                    _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                    return res;
+                }
+                if (null != jObj["result"])
+                {
+                    var result = jObj["result"];
+
+                    uploadedSize = result["received_size"].Value<int>();
+                    if (uploadedSize == FileHelper.Length(pathToFile))
+                    {
+                        var uId = result["uploaded_id"];
+                        if (null != uId)
+                        {
+                            uploadedId = uId.Value<long>();
+                        }
+
+                        res = true;
+                    }
+                    else
+                    {
+                        LastError = "Wrong size of uploaded files " + pathToFile;
+                        _log.Add(
+                            TAG,
+                            "Wrong size of uploaded files " + pathToFile,
+                            LogItemType.Warning);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = ex.Message;
+                _log.AddError(TAG, ex, "fileupload failed");
+            }
+
+            return res;
+        }
+        #endregion
+
         public static SessionInfo Login(string login, string passwd, bool saveSession)
         {
             SessionInfo si = null;
@@ -281,6 +457,7 @@ namespace OasCommonLib.WebService
 
             return result;
         }
+
 
         #region vin info reader/parse/update
         public static bool EdmundsVinInfo(string vin, out VinInfo vinInfo)
@@ -835,7 +1012,6 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 LastError = ex.Message;
                 _log.AddError(
                             TAG,
@@ -844,7 +1020,7 @@ namespace OasCommonLib.WebService
             }
             return res;
         }
-#endregion
+        #endregion
 
         public static string ErrorResponse(Exception ex)
         {
