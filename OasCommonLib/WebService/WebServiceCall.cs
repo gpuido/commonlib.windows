@@ -1253,6 +1253,54 @@ namespace OasCommonLib.WebService
 
         #endregion
 
+        internal static bool SendErrorReport(Exception ex)
+        {
+            bool result = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+
+            LastError = "";
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   string.Format("no session info found in 'SaveAssignment'"),
+                   LogItemType.Error);
+
+                return result;
+            }
+
+            reqparm.Add("PHONE_MODEL", "DC");
+            reqparm.Add("APP_VERSION_NAME", ClientInfo);
+            reqparm.Add("ANDROID_VERSION", OSInfo.GetFullInfo());
+            reqparm.Add("STACK_TRACE", ex.StackTrace);
+            reqparm.Add("LOGCAT", ex.Message);
+
+            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cookies.Add(cc);
+            try
+            {
+                using (WebClientEx client = new WebClientEx(cookies))
+                {
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    responsebody = Encoding.UTF8.GetString(responsebytes);
+                }
+
+                result = true;
+            }
+            catch (Exception e)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                _log.AddError(TAG, e);
+            }
+
+            return result;
+        }
         public static string ErrorResponse(Exception ex)
         {
             return "{\"error\":\"" + ex.Message + "\"}";
