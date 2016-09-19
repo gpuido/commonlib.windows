@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OasCommonLib.Data;
+using OasCommonLib.Data.Config;
 using OasCommonLib.Helpers;
 using OasCommonLib.Logger;
 using OasCommonLib.OasEventManager;
@@ -1253,6 +1254,140 @@ namespace OasCommonLib.WebService
 
         #endregion
 
+        public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds)
+        {
+            bool res = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+
+            cfgAddActivities = new List<AdditionalActivity>();
+            cfgOperCodes = new List<OperationCode>();
+            cfgPreconds = new List<PreconditionInfo>();
+            LastError = "";
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   "no session info found in 'read_full_case'",
+                   LogItemType.Error);
+
+                return res;
+            }
+
+            reqparm.Add("action", "read_full_config");
+            reqparm.Add("client", ClientInfo);
+
+            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cookies.Add(cc);
+            try
+            {
+                using (WebClientEx client = new WebClientEx(cookies))
+                {
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    responsebody = Encoding.UTF8.GetString(responsebytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                LastError = "read case failed. error : " + ex.Message;
+                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
+                _log.AddError(TAG, ex, LastError);
+
+                responsebody = WebServiceCall.ErrorResponse(ex);
+            }
+
+            if (string.IsNullOrEmpty(responsebody))
+            {
+                return false;
+            }
+            try
+            {
+                JObject jObj = JObject.Parse(responsebody);
+
+                if (null != jObj["error"])
+                {
+                    LastError = jObj["error"].Value<string>();
+                    _log.Add(TAG, LastError, LogItemType.Error);
+                    return false;
+                }
+
+                if (null != jObj["result"])
+                {
+                    var result = jObj["result"];
+
+                    var codes = result["Codes"];
+                    if (null != codes)
+                    {
+                        foreach (var c in codes)
+                        {
+                            cfgOperCodes.Add(new OperationCode()
+                            {
+                                Id = c["id"].Value<long>(),
+                                CompanyId = c["company_id"].Value<long>(),
+                                Code = c["code"].Value<string>(),
+                                Abbr = c["abbr"].Value<string>(),
+                                Description = c["description"].Value<string>()
+                            });
+                        }
+                    }
+
+                    var activities = result["AddActivities"];
+                    if (null != activities)
+                    {
+                        foreach (var c in activities)
+                        {
+                            cfgAddActivities.Add(new AdditionalActivity()
+                            {
+                                Id = c["id"].Value<long>(),
+                                CompanyId = c["company_id"].Value<long>(),
+                                Code = c["code"].Value<string>(),
+                                Description = c["description"].Value<string>()
+                            });
+                        }
+                    }
+
+                    var preconds = result["Preconditions"];
+                    if (null != preconds)
+                    {
+                        foreach (var c in preconds)
+                        {
+                            cfgPreconds.Add(new PreconditionInfo()
+                            {
+                                Id = c["id"].Value<long>(),
+                                CompanyId = c["company_id"].Value<long>(),
+                                Index = c["idx"].Value<int>(),
+                                Code = c["code"].Value<string>(),
+                                Description = c["description"].Value<string>(),
+                                PicturesToTake = c["pictures_to_take"].Value<int>()
+                            });
+                        }
+                    }
+                }
+
+                res = true;
+            }
+            catch (JsonReaderException jre)
+            {
+                LastError = "read case failed. error : " + jre.Message;
+                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
+                _log.AddError(TAG, jre, LastError);
+            }
+            catch (Exception ex)
+            {
+                LastError = "read case failed. error : " + ex.Message;
+                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
+                _log.AddError(TAG, ex, LastError);
+            }
+
+            return res;
+        }
+
+
         public static bool SendErrorReport(Exception ex)
         {
             bool result = false;
@@ -1301,6 +1436,7 @@ namespace OasCommonLib.WebService
 
             return result;
         }
+
         public static string ErrorResponse(Exception ex)
         {
             return "{\"error\":\"" + ex.Message + "\"}";

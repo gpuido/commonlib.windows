@@ -54,6 +54,8 @@
     <Compile Include="Data\AudioNote.cs" />
     <Compile Include="Data\CommonInfo.cs" />
     <Compile Include="Data\CommonUploadInfo.cs" />
+    <Compile Include="Data\Config\AdditionalActivity.cs" />
+    <Compile Include="Data\Config\OperationCode.cs" />
     <Compile Include="Data\Enums\InfoTypeEnum.cs" />
     <Compile Include="Data\EstimatorList.cs" />
     <Compile Include="Data\PreconditionInfo.cs" />
