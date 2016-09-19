@@ -56,6 +56,7 @@
     <Compile Include="Data\CommonUploadInfo.cs" />
     <Compile Include="Data\Enums\InfoTypeEnum.cs" />
     <Compile Include="Data\EstimatorList.cs" />
+    <Compile Include="Data\PreconditionInfo.cs" />
     <Compile Include="Data\ServerInfo.cs" />
     <Compile Include="Data\SupplementInfo.cs" />
     <Compile Include="Data\SupplementInfoList.cs" />

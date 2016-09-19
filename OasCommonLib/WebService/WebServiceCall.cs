@@ -1253,7 +1253,7 @@ namespace OasCommonLib.WebService
 
         #endregion
 
-        internal static bool SendErrorReport(Exception ex)
+        public static bool SendErrorReport(Exception ex)
         {
             bool result = false;
             string responsebody = string.Empty;
