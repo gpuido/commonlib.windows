@@ -1,6 +1,8 @@
 ﻿namespace OasCommonLib.Helpers
 {
     using Config;
+    using System;
+    using System.Diagnostics;
     using System.IO;
 
     public class ImageHelper
@@ -41,7 +43,8 @@
         }
         public static string CaseImagePath(long envelopeId, string imageName)
         {
-            return Path.Combine(CaseImageFolder(envelopeId), imageName);
+            Debug.Assert(envelopeId > 0L);
+            return Path.Combine(CaseImageFolder(Math.Abs(envelopeId)), imageName);
         }
 
 

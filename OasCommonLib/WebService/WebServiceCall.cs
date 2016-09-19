@@ -857,21 +857,43 @@ namespace OasCommonLib.WebService
         #endregion
 
         #region download data files
-        public static bool DownloadPrecondition(long envelopeId, long precNumber, string imageName, string detailImageName)
+        public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
         {
             Debug.Assert(envelopeId > 0);
             //
             // todo: call directly download 'dp'
             //
-            return DownloadAdditionalInfoImage(-envelopeId, precNumber, imageName, detailImageName);
+            return DownloadAdditionalInfoImage(-envelopeId, precNumber, pathToImage);
         }
 
-        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbRef, string imageName, string filePath, string downloadAction = "dl")
+        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbRef, string pathToImage, InfoTypeEnum infoType = InfoTypeEnum.AiDetail)
         {
             bool res = false;
             string downloadUrl;
             SessionInfo sessionInfo = SessionInfo.Instance;
             string DataServiceUrl = _cfg.DataServiceUrl;
+            string imageName = Path.GetFileName(pathToImage);
+            //
+            // this weird code should be gone after split on upload/download preconditions and ai
+            //
+            string downloadAction = "dl";
+
+            switch (infoType)
+            {
+                case InfoTypeEnum.AiDetail:
+                    downloadAction = "dl";
+                    break;
+                case InfoTypeEnum.Precondition:
+                    downloadAction = "dl";
+                    break;
+                case InfoTypeEnum.Supplement:
+                    downloadAction = "ds";
+                    break;
+                case InfoTypeEnum.AudioNote:
+                    downloadAction = "da";
+                    break;
+            }
+
 
             //
             // todo: uncomment after DownloadPrecondition will be revuild
@@ -886,7 +908,7 @@ namespace OasCommonLib.WebService
 
             LastError = string.Empty;
             string requestParameters;
-            if (dbRef > -1L)
+            if (dbRef > 0L)
             {
                 requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + dbRef.ToString() + "/" + imageName;
             }
@@ -906,12 +928,12 @@ namespace OasCommonLib.WebService
             {
                 using (WebClient wc = new WebClient())
                 {
-                    wc.DownloadFile(downloadUrl, filePath);
+                    wc.DownloadFile(downloadUrl, pathToImage);
                 }
 
-                if (File.Exists(filePath) && FileHelper.Length(filePath) < FileHelper.MinimalLength)
+                if (File.Exists(pathToImage) && FileHelper.Length(pathToImage) < FileHelper.MinimalLength)
                 {
-                    string text = File.ReadAllText(filePath);
+                    string text = File.ReadAllText(pathToImage);
                     string error = "";
                     if (!string.IsNullOrEmpty(text))
                     {
@@ -929,7 +951,7 @@ namespace OasCommonLib.WebService
 
                     if (null != error)
                     {
-                        LastError = string.Format("file '{0}' download error", downloadUrl);
+                        LastError = string.Format("file '{0}' download error", requestParameters);
                         _log.Add(TAG, LastError, LogItemType.Error);
                         return res;
                     }
@@ -953,13 +975,16 @@ namespace OasCommonLib.WebService
             }
             return res;
         }
+        #endregion
 
-        public static bool DownloadAudio(long envelopeId, string audioName, string caseAudioName)
+        #region audio 
+        public static bool DownloadAudio(long envelopeId, string caseAudioName)
         {
             bool res = false;
             string downloadUrl;
             SessionInfo sessionInfo = SessionInfo.Instance;
             string DataServiceUrl = _cfg.DataServiceUrl;
+            string audioName = Path.GetFileName(caseAudioName);
 
             if (!DataServiceUrl.EndsWith("/"))
             {
@@ -1020,6 +1045,212 @@ namespace OasCommonLib.WebService
             }
             return res;
         }
+
+        public static bool UploadAudio(long envelopeId, string fullPath, out long uploadedId)
+        {
+            uploadedId = 0L;
+            long uId;
+
+            bool res = WebServiceCall.UploadFile(envelopeId, 0, fullPath, InfoTypeEnum.AudioNote, out uId);
+
+            if (res)
+            {
+                uploadedId = uId;
+            }
+
+            return res;
+        }
+
+        public static bool ReadAudioNotes(long envelopeId, out List<AudioNote> anList)
+        {
+            bool res = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+
+            anList = null;
+            LastError = "";
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   string.Format("no session info found in 'read_audioinfo'"),
+                   LogItemType.Error);
+
+                return res;
+            }
+
+#if UNDECODED
+            reqparm.Add("action", "read_audioinfo");
+            reqparm.Add("client", VersionHelper.ClientInfo);
+
+            //
+            // envelope
+            reqparm.Add("envelope_id", envelopeId.ToString());
+#else
+            string parameters = string.Format("action=read_audioinfo&client={0}&envelope_id={1}", ClientInfo, envelopeId);
+            reqparm.Add("_d", CoderHelper.Encode(parameters));
+#endif
+
+            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cookies.Add(cc);
+            try
+            {
+                using (WebClientEx client = new WebClientEx(cookies))
+                {
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    responsebody = Encoding.UTF8.GetString(responsebytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = ex.Message;
+                responsebody = WebServiceCall.ErrorResponse(ex);
+                _log.AddError(TAG, ex);
+            }
+
+            JObject jObj = JObject.Parse(responsebody);
+
+            if (null != jObj["_d"])
+            {
+                string encodedResponse = jObj["_d"].Value<string>();
+                responsebody = CoderHelper.Decode(encodedResponse);
+
+                jObj = JObject.Parse(responsebody);
+            }
+
+            if (null != jObj["error"])
+            {
+                LastError = jObj["error"].Value<string>();
+                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                return res;
+            }
+            if (null != jObj["result"])
+            {
+                anList = new List<AudioNote>();
+
+                var result = jObj["result"];
+                DateTime updated;
+
+                foreach (var data in result["audio_notes"])
+                {
+                    try
+                    {
+                        updated = data["updated"].Value<DateTime>();
+                    }
+                    catch
+                    {
+                        updated = DateTime.Now;
+                    }
+
+                    anList.Add(new AudioNote()
+                    {
+                        EnvelopeId = envelopeId,
+                        Id = data["id"].Value<long>(),
+                        FileName = data["file_name"].Value<string>(),
+                        Updated = updated
+                    });
+                }
+
+                res = true;
+            }
+
+            return res;
+        }
+
+        public static bool DeleteAudioNote(long envelopeId, long audioNoteId, string audioFile)
+        {
+            bool res = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+            int deletedAudioNoteId = 0;
+
+            LastError = "";
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   string.Format("no session info found in 'clear_audioinfo'"),
+                   LogItemType.Error);
+
+                return res;
+            }
+
+#if UNDECODED
+            reqparm.Add("action", "clear_audioinfo");
+            reqparm.Add("client", ClientInfo);
+            reqparm.Add("envelope_id", envelopeId.ToString());
+            reqparm.Add("audio_note_id", audioNoteId.ToString());
+            reqparm.Add("audio_note", audioFile);
+
+            //
+            // envelope
+            reqparm.Add("envelope_id", envelopeId.ToString());
+
+#else
+            string parameters = string.Format("action=clear_audioinfo&client={0}&envelope_id={1}&audio_note_id={2}&file_name={3}&audio_note={4}", ClientInfo, envelopeId, audioNoteId, audioFile);
+            reqparm.Add("_d", CoderHelper.Encode(parameters));
+#endif
+
+            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cookies.Add(cc);
+            try
+            {
+                using (WebClientEx client = new WebClientEx(cookies))
+                {
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    responsebody = Encoding.UTF8.GetString(responsebytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = ex.Message;
+                responsebody = WebServiceCall.ErrorResponse(ex);
+                _log.AddError(TAG, ex);
+            }
+
+            JObject jObj = JObject.Parse(responsebody);
+
+            if (null != jObj["_d"])
+            {
+                string encodedResponse = jObj["_d"].Value<string>();
+                responsebody = CoderHelper.Decode(encodedResponse);
+
+                jObj = JObject.Parse(responsebody);
+            }
+
+            if (null != jObj["error"])
+            {
+                LastError = jObj["error"].Value<string>();
+                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                return res;
+            }
+            if (null != jObj["result"])
+            {
+                var result = jObj["result"];
+
+                deletedAudioNoteId = result["audio_info_id"].Value<int>();
+                _log.Add(
+                   TAG,
+                   "deleted audio_note_id : " + deletedAudioNoteId);
+
+                res = true;
+            }
+
+            return res;
+        }
+
         #endregion
 
         public static string ErrorResponse(Exception ex)
