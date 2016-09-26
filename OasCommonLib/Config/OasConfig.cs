@@ -359,9 +359,9 @@ namespace OasCommonLib.Config
             {
                 if (File.Exists(configName))
                 {
-                    SaveError(configName);
+//                    SaveError(configName);
                     var json = File.ReadAllText(configName);
-                    SaveError(json);
+//                    SaveError(json);
                     Data = ParseJson(json); //  JsonConvert.DeserializeObject<OasConfigData>(json);
                 }
 

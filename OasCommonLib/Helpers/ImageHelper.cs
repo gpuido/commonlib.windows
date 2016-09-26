@@ -56,7 +56,7 @@
             return !(fileExists && fileHasCorrectSize);
         }
 
-        public static string AudioFolder(long envelopeId)
+        public static string CaseAudioFolder(long envelopeId)
         {
             var folder = Path.Combine(_cfg.CaseAudioPath, envelopeId.ToString());
             if (!Directory.Exists(folder))
@@ -69,7 +69,7 @@
 
         public static string AudioPath(long envelopeId, string audioName)
         {
-            var folder = Path.Combine(_cfg.CaseAudioPath, envelopeId.ToString());
+            var folder = CaseAudioFolder(envelopeId);
             return Path.Combine(folder, audioName);                
         }
 

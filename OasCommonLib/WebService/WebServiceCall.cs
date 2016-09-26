@@ -132,7 +132,7 @@ namespace OasCommonLib.WebService
         }
 
         #region images
-        public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, out long uploadedId)
+        public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, string tz, string proof, out long uploadedId)
         {
             bool res = false;
             string responsebody = string.Empty;
@@ -154,8 +154,7 @@ namespace OasCommonLib.WebService
                     uploadType = "upload_image";
                     break;
                 case InfoTypeEnum.Precondition:
-                    envelopeId = -1 * Math.Abs(envelopeId);
-                    uploadType = "upload_image";
+                    uploadType = "upload_precondition";
                     break;
                 case InfoTypeEnum.Supplement:
                     uploadType = "upload_suppliment";
@@ -193,6 +192,8 @@ namespace OasCommonLib.WebService
             nvc.Add("action", uploadType);
             nvc.Add("client", ClientInfo);
             nvc.Add("envelope_id", envelopeId.ToString());
+            nvc.Add("tz", tz);
+            nvc.Add("proof", proof);
             nvc.Add("filename", fileName);
             if (dbReference > 0)
             {
@@ -867,7 +868,7 @@ namespace OasCommonLib.WebService
             return DownloadAdditionalInfoImage(-envelopeId, precNumber, pathToImage);
         }
 
-        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbRef, string pathToImage, InfoTypeEnum infoType = InfoTypeEnum.AiDetail)
+        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage, InfoTypeEnum infoType = InfoTypeEnum.AiDetail)
         {
             bool res = false;
             string downloadUrl;
@@ -909,9 +910,9 @@ namespace OasCommonLib.WebService
 
             LastError = string.Empty;
             string requestParameters;
-            if (dbRef > 0L)
+            if (dbReference > 0L)
             {
-                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + dbRef.ToString() + "/" + imageName;
+                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + dbReference.ToString() + "/" + imageName;
             }
             else
             {
@@ -1047,12 +1048,12 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool UploadAudio(long envelopeId, string fullPath, out long uploadedId)
+        public static bool UploadAudio(long envelopeId, string fullPath, string tz, string proof, out long uploadedId)
         {
             uploadedId = 0L;
             long uId;
 
-            bool res = WebServiceCall.UploadFile(envelopeId, 0, fullPath, InfoTypeEnum.AudioNote, out uId);
+            bool res = WebServiceCall.UploadFile(envelopeId, 0, fullPath, InfoTypeEnum.AudioNote, tz, proof, out uId);
 
             if (res)
             {
@@ -1138,23 +1139,26 @@ namespace OasCommonLib.WebService
                 var result = jObj["result"];
                 DateTime updated;
 
-                foreach (var data in result["audio_notes"])
+                foreach (var d in result["audio_notes"])
                 {
                     try
                     {
-                        updated = data["updated"].Value<DateTime>();
+                        updated = d["updated"].Value<DateTime>();
                     }
                     catch
                     {
-                        updated = DateTime.Now;
+                        Debug.Fail("failed to parse string date " + d["updated"].Value<string>());
+                        updated = DateTime.UtcNow;
                     }
 
                     anList.Add(new AudioNote()
                     {
                         EnvelopeId = envelopeId,
-                        Id = data["id"].Value<long>(),
-                        FileName = data["file_name"].Value<string>(),
-                        Updated = updated
+                        Id = d["id"].Value<long>(),
+                        FileName = d["file_name"].Value<string>(),
+                        Updated = updated,
+                        TZ = d["tz"].Value<string>(),
+                        ProofStamp = d["proof"].Value<string>()
                     });
                 }
 
@@ -1191,7 +1195,7 @@ namespace OasCommonLib.WebService
             reqparm.Add("action", "clear_audioinfo");
             reqparm.Add("client", ClientInfo);
             reqparm.Add("envelope_id", envelopeId.ToString());
-            reqparm.Add("audio_note_id", audioNoteId.ToString());
+            reqparm.Add("id", audioNoteId.ToString());
             reqparm.Add("audio_note", audioFile);
 
             //
@@ -1199,7 +1203,7 @@ namespace OasCommonLib.WebService
             reqparm.Add("envelope_id", envelopeId.ToString());
 
 #else
-            string parameters = string.Format("action=clear_audioinfo&client={0}&envelope_id={1}&audio_note_id={2}&file_name={3}&audio_note={4}", ClientInfo, envelopeId, audioNoteId, audioFile);
+            string parameters = string.Format("action=clear_audioinfo&client={0}&envelope_id={1}&id={2}&file_name={3}", ClientInfo, envelopeId, audioNoteId, audioFile);
             reqparm.Add("_d", CoderHelper.Encode(parameters));
 #endif
 
@@ -1241,7 +1245,7 @@ namespace OasCommonLib.WebService
             {
                 var result = jObj["result"];
 
-                deletedAudioNoteId = result["audio_info_id"].Value<int>();
+                deletedAudioNoteId = result["id"].Value<int>();
                 _log.Add(
                    TAG,
                    "deleted audio_note_id : " + deletedAudioNoteId);

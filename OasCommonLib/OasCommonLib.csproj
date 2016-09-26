@@ -75,6 +75,7 @@
     <Compile Include="Helpers\NewVersionHelper.cs" />
     <Compile Include="Helpers\OASImage.cs" />
     <Compile Include="Helpers\OSInfo.cs" />
+    <Compile Include="Helpers\UtcHelper.cs" />
     <Compile Include="Helpers\ZipHelper.cs" />
     <Compile Include="Interfaces\IError.cs" />
     <Compile Include="Logger\Log.cs" />
