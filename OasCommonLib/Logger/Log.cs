@@ -5,6 +5,7 @@
     using OasEventManager;
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -222,22 +223,26 @@
             try
             {
                 LogItem item;
+                List<string> items = new List<string>();
                 while (!LogItemList.IsEmpty)
                 {
-                    LogItemList.TryTake(out item);
+                    if (LogItemList.TryTake(out item))
+                    {
+                        items.Add(item.ToString());
+                    }
                 }
 
-                        if (null != _oasEvent)
-                        {
-                            _oasEvent.RaiseEvent(OasEventType.NewLogItem, fname);
-                        }
+                if (null != _oasEvent)
+                {
+                    _oasEvent.RaiseEvent(OasEventType.NewLogItem, items[items.Count - 1]);
+                }
 
-                        if (_lastDay != DateTime.Now.Day)
-                        {
-                            Insert(0, TAG, StartMessage());
-                            _lastDay = DateTime.Now.Day;
-                        }
-                File.AppendAllLines(Path.Combine(_cfg.LogPath, fname), LogItemList.Select((it) => it.ToString()));
+                if (_lastDay != DateTime.Now.Day)
+                {
+                    Insert(0, TAG, StartMessage());
+                    _lastDay = DateTime.Now.Day;
+                }
+                File.AppendAllLines(Path.Combine(_cfg.LogPath, fname), items);
 
                 Debug.WriteLine("Log was flushed");
             }
