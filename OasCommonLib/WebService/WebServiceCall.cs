@@ -862,10 +862,7 @@ namespace OasCommonLib.WebService
         public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
         {
             Debug.Assert(envelopeId > 0);
-            //
-            // todo: call directly download 'dp'
-            //
-            return DownloadAdditionalInfoImage(-envelopeId, precNumber, pathToImage);
+            return DownloadAdditionalInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
         }
 
         public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage, InfoTypeEnum infoType = InfoTypeEnum.AiDetail)
@@ -875,9 +872,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             string DataServiceUrl = _cfg.DataServiceUrl;
             string imageName = Path.GetFileName(pathToImage);
-            //
-            // this weird code should be gone after split on upload/download preconditions and ai
-            //
+
             string downloadAction = "dl";
 
             switch (infoType)
@@ -886,7 +881,7 @@ namespace OasCommonLib.WebService
                     downloadAction = "dl";
                     break;
                 case InfoTypeEnum.Precondition:
-                    downloadAction = "dl";
+                    downloadAction = "dp";
                     break;
                 case InfoTypeEnum.Supplement:
                     downloadAction = "ds";
@@ -896,12 +891,7 @@ namespace OasCommonLib.WebService
                     break;
             }
 
-
-            //
-            // todo: uncomment after DownloadPrecondition will be revuild
-            //
-            //Debug.Assert(envelopeId > 0);
-
+            Debug.Assert(envelopeId > 0);
 
             if (!DataServiceUrl.EndsWith("/"))
             {

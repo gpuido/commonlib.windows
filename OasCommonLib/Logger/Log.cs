@@ -4,7 +4,7 @@
     using Helpers;
     using OasEventManager;
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -51,14 +51,16 @@
 
         private static readonly OasConfig _cfg = OasConfig.Instance;
 
-        public readonly List<LogItem> LogItemList = new List<LogItem>();
+        public readonly ConcurrentBag<LogItem> LogItemList = new ConcurrentBag<LogItem>();
         private readonly Timer timer;
 
         public string LogFileName { get; private set; }
 
+        public string LastItem { get; private set; }
+
         public string Version { get; set; }
 
-        private OasEventSource _oasEvent = GlobalEventManager.Instance.OasEventSource;
+        private static readonly OasEventSource _oasEvent = GlobalEventManager.Instance.OasEventSource;
 
         private int _lastDay;
         private int _elapseTimerMin;
@@ -135,7 +137,8 @@
             if (!string.IsNullOrEmpty(_module) && !string.IsNullOrEmpty(_eventName))
             {
                 var logEvent = new LogItem(_module, Version, _eventName, _eventType, null != ex ? ex.StackTrace : null);
-                LogItemList.Insert(index, logEvent);
+                LastItem = logEvent.ToString();
+                LogItemList.Add(logEvent);
 
                 _oasEvent.RaiseEvent(OasEventType.NewLogItem, logEvent.ToString());
 
@@ -158,6 +161,7 @@
             if (!string.IsNullOrEmpty(_module) && !string.IsNullOrEmpty(_eventName))
             {
                 var logEvent = new LogItem(_module, Version, _eventName, _eventType, null != ex ? ex.StackTrace : null);
+                LastItem = logEvent.ToString();
                 LogItemList.Add(logEvent);
 
                 _oasEvent.RaiseEvent(OasEventType.NewLogItem, logEvent.ToString());
@@ -175,7 +179,8 @@
         {
             if (!string.IsNullOrEmpty(_module) && null != ex)
             {
-                var logEvent = new LogItem(_module, Version, ex.Message + (string.IsNullOrEmpty(message) ? "" : ", " + message), LogItemType.Error, ex.StackTrace);
+                var logEvent = new LogItem(_module, Version, ex.Message + (string.IsNullOrEmpty(message) ? string.Empty : ", " + message), LogItemType.Error, ex.StackTrace);
+                LastItem = logEvent.ToString();
                 LogItemList.Add(logEvent);
 
                 _oasEvent.RaiseEvent(OasEventType.NewLogItem, logEvent.ToString());
@@ -216,10 +221,12 @@
             string fname = MakeLogFileName();
             try
             {
-                lock (LogItemList)
+                LogItem item;
+                while (!LogItemList.IsEmpty)
                 {
-                    if (LogItemList.Count() > 0)
-                    {
+                    LogItemList.TryTake(out item);
+                }
+
                         if (null != _oasEvent)
                         {
                             _oasEvent.RaiseEvent(OasEventType.NewLogItem, fname);
@@ -230,10 +237,8 @@
                             Insert(0, TAG, StartMessage());
                             _lastDay = DateTime.Now.Day;
                         }
-                    }
-                }
                 File.AppendAllLines(Path.Combine(_cfg.LogPath, fname), LogItemList.Select((it) => it.ToString()));
-                LogItemList.Clear();
+
                 Debug.WriteLine("Log was flushed");
             }
             catch (Exception ex)
