@@ -862,16 +862,29 @@ namespace OasCommonLib.WebService
         public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
         {
             Debug.Assert(envelopeId > 0);
-            return DownloadAdditionalInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
+            return DownloadInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
         }
 
-        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage, InfoTypeEnum infoType = InfoTypeEnum.AiDetail)
+        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage)
+        {
+            Debug.Assert(envelopeId > 0);
+            return DownloadInfoImage(envelopeId, dbReference, pathToImage, InfoTypeEnum.AiDetail);
+        }
+
+        public static bool DownloadSupplementInfoImage(long envelopeId, string pathToImage)
+        {
+            Debug.Assert(envelopeId > 0);
+            return DownloadInfoImage(envelopeId, -1L, pathToImage, InfoTypeEnum.Supplement);
+        }
+
+        public static bool DownloadInfoImage(long envelopeId, long dbReference, string pathToImage, InfoTypeEnum infoType)
         {
             bool res = false;
             string downloadUrl;
             SessionInfo sessionInfo = SessionInfo.Instance;
             string DataServiceUrl = _cfg.DataServiceUrl;
             string imageName = Path.GetFileName(pathToImage);
+            int stage = 0;
 
             string downloadAction = "dl";
 
@@ -922,9 +935,11 @@ namespace OasCommonLib.WebService
                 {
                     wc.DownloadFile(downloadUrl, pathToImage);
                 }
+                stage = 1;
 
                 if (File.Exists(pathToImage) && FileHelper.Length(pathToImage) < FileHelper.MinimalLength)
                 {
+                    stage = 2;
                     string text = File.ReadAllText(pathToImage);
                     string error = "";
                     if (!string.IsNullOrEmpty(text))
@@ -940,21 +955,22 @@ namespace OasCommonLib.WebService
                         }
                         error = (string)jObj["error"].Value<string>();
                     }
-
+                    stage = 3;
                     if (null != error)
                     {
-                        LastError = string.Format("file '{0}' download error", requestParameters);
+                        LastError = string.Format("file '{0}' download error: '{1}', stage : {2}", requestParameters, error.ToString(), stage);
                         _log.Add(TAG, LastError, LogItemType.Error);
                         return res;
                     }
                 }
 
+                stage = 4;
                 res = true;
             }
             catch (JsonException jre)
             {
-                _log.AddError(TAG, jre);
-                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
+                _log.AddError(TAG, jre, "stage: " + stage);
+                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace + Environment.NewLine + "stage: " + stage);
             }
             catch (Exception ex)
             {
@@ -962,7 +978,7 @@ namespace OasCommonLib.WebService
                 _log.AddError(
                             TAG,
                             ex,
-                            string.Format("file '{0}' download error", downloadUrl));
+                            string.Format("file '{0}' download error, stage: {2}", downloadUrl, stage));
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
             }
             return res;

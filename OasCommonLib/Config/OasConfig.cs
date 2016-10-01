@@ -16,6 +16,7 @@ namespace OasCommonLib.Config
     {
         // place where check for EMS files
         public string[] EMSCasePath;
+        public int[] CasePathWatcherDelay;
         public string MCFPath;
         // catalog where we copying ENS files for local use
         public string DBFCasePath;
@@ -40,6 +41,24 @@ namespace OasCommonLib.Config
                 {
                     EMSCasePath[i] = emsCasePath[i].Value<string>();
                 }
+            }
+            else
+            {
+                InitEmsCasePath(OasConfig.Instance.DataPath);
+            }
+
+            JArray casePathWatcherDelay = (JArray)caseConfig["CasePathWatcherDelay"];
+            if (null != casePathWatcherDelay)
+            {
+                CasePathWatcherDelay = new int[emsCasePath.Count];
+                for (int i = 0; i < casePathWatcherDelay.Count; ++i)
+                {
+                    CasePathWatcherDelay[i] = casePathWatcherDelay[i].Value<int>();
+                }
+            }
+            else
+            {
+                InitCasePathWatcherDelay();
             }
 
             JToken jt = caseConfig["MCFPath"];
@@ -94,6 +113,7 @@ namespace OasCommonLib.Config
         public void InitDefault(string dataPath)
         {
             InitEmsCasePath(dataPath);
+            InitCasePathWatcherDelay();
             MCFPath = dataPath + @"\MCF\";
 
             DBFCasePath = dataPath + @"\DBF\";
@@ -107,7 +127,15 @@ namespace OasCommonLib.Config
 
             CaseImagePath = dataPath + @"\CaseImages\";
             CaseAudioPath = dataPath + @"\CaseAudioNotes\";
+        }
 
+        private void InitCasePathWatcherDelay()
+        {
+            CasePathWatcherDelay = new int[EMSCasePath.Length];
+            for (int i = 0; i < EMSCasePath.Length; ++i)
+            {
+                CasePathWatcherDelay[i] = OasConfig.WATCHER_DELAY;
+            }
         }
 
         public void InitEmsCasePath(string dataPath)
@@ -119,7 +147,6 @@ namespace OasCommonLib.Config
                 EMSCasePath[i] = Path.Combine(dataPath, "EMS", Estimators.List[element.Key]);
             }
         }
-
     }
 
     public class WebServiceData : IConfigData
@@ -200,9 +227,9 @@ namespace OasCommonLib.Config
 
     public class OasConfigData
     {
-        public CaseConfigData CaseConfig { get; set; }
-        public WebServiceData WebConfig { get; set; }
-        public WebServerData WebServer { get; set; }
+        public readonly CaseConfigData CaseConfig;
+        public readonly WebServiceData WebConfig;
+        public readonly WebServerData WebServer;
         public string LogPath { get; set; }
 
         // place to store additional data
@@ -286,6 +313,8 @@ namespace OasCommonLib.Config
 
         private static readonly OasEventSource _oasEvent = GlobalEventManager.Instance.OasEventSource;
 
+        public static readonly int WATCHER_DELAY = 15;
+
         public bool IsAdmin { get; set; }
         public OasConfigData Data { get; set; }
         public string DataFolderPath { get; private set; }
@@ -359,9 +388,9 @@ namespace OasCommonLib.Config
             {
                 if (File.Exists(configName))
                 {
-//                    SaveError(configName);
+                    //                    SaveError(configName);
                     var json = File.ReadAllText(configName);
-//                    SaveError(json);
+                    //                    SaveError(json);
                     Data = ParseJson(json); //  JsonConvert.DeserializeObject<OasConfigData>(json);
                 }
 
@@ -408,7 +437,7 @@ namespace OasCommonLib.Config
 
             if (0 == Data.WatcherDelay)
             {
-                Data.WatcherDelay = 5;
+                Data.WatcherDelay = WATCHER_DELAY;
             }
 
             if (0 == Data.ServerPollTimeout)
@@ -733,11 +762,23 @@ namespace OasCommonLib.Config
             int index = (int)est;
             if (index >= Data.CaseConfig.EMSCasePath.Length)
             {
-                throw new ArgumentException("index is greater then path array");
+                throw new ArgumentException("index is greater then array length : " + index);
             }
 
             return Data.CaseConfig.EMSCasePath[index];
         }
+
+        public int GetCasePathWatcherDelay(EstimatorEnum est)
+        {
+            int index = (int)est;
+            if (index >= Data.CaseConfig.CasePathWatcherDelay.Length)
+            {
+                throw new ArgumentException("index is greater then array length : " + index);
+            }
+
+            return Data.CaseConfig.CasePathWatcherDelay[index];
+        }
+
         public void SetEmsCasePath(EstimatorEnum est, string path)
         {
             int index = (int)est;
@@ -756,6 +797,26 @@ namespace OasCommonLib.Config
                 Data.CaseConfig.EMSCasePath[index] = path;
                 CheckPath(Data.CaseConfig.EMSCasePath[index]);
                 _oasEvent.RaiseEvent(OasEventType.CasePathCahnged);
+            }
+        }
+
+        public void SetCasePathWatcherDelay(EstimatorEnum est, int delay)
+        {
+            int index = (int)est;
+            if (index >= Data.CaseConfig.CasePathWatcherDelay.Length)
+            {
+                throw new ArgumentException("index is greater then path array");
+            }
+
+            if (delay <= 0)
+            {
+                throw new ArgumentException("delay can not be zero or negative");
+            }
+
+            if (Data.CaseConfig.CasePathWatcherDelay[index] != delay)
+            {
+                Data.CaseConfig.CasePathWatcherDelay[index] = delay;
+                _oasEvent.RaiseEvent(OasEventType.WatcherDelayChanged, est);
             }
         }
         #endregion

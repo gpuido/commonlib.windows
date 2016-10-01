@@ -10,7 +10,7 @@
         CaseDeleted, CaseAdded, CaseUpdate, NewCaseList, CaseAddInfoDeleted, CaseAssigned,
 
         // config events
-        EMSCasePathCahnged, MCFPathCahnged, CasePathCahnged, ImagePathCahnged, UrlChanged, LogPathChanged,
+        EMSCasePathCahnged, MCFPathCahnged, CasePathCahnged, WatcherDelayChanged, ImagePathCahnged, UrlChanged, LogPathChanged,
         DataPathChanged, ServerPollTimeoutChanged, WebServerChanged, SqLitePathChanged, HowManyDaysToShowChanged,
 
         // offers
