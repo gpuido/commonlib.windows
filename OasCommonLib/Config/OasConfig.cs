@@ -262,6 +262,8 @@ namespace OasCommonLib.Config
         // delay after emswatcher noticed files changes
         public int WatcherDelay { get; set; }
 
+        public bool EncodeTraffic { get; set; }
+
         // 
         public bool StartAppAutomatically { get; set; }
 
@@ -296,6 +298,8 @@ namespace OasCommonLib.Config
             CloseToTray = true;
             SortHeaderOrder = false;
             StampImages = false;
+
+            EncodeTraffic = false;
 
 #if DEBUG
             LogPath = @"..\..\Log";
@@ -583,6 +587,12 @@ namespace OasCommonLib.Config
             if (null != jt)
             {
                 ocd.WatcherDelay = jt.Value<int>();
+            }
+
+            jt = o["EncodeTraffic"];
+            if (null != jt)
+            {
+                ocd.EncodeTraffic = jt.Value<bool>();
             }
 
             jt = o["StartAppAutomatically"];
@@ -1184,6 +1194,21 @@ namespace OasCommonLib.Config
                 if (Data.WatcherDelay != value)
                 {
                     Data.WatcherDelay = value;
+                }
+            }
+        }
+
+        public bool EncodeTraffic
+        {
+            get
+            {
+                return Data.EncodeTraffic;
+            }
+            set
+            {
+                if (Data.EncodeTraffic != value)
+                {
+                    Data.EncodeTraffic = value;
                 }
             }
         }

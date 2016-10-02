@@ -44,13 +44,16 @@ namespace OasCommonLib.WebService
             serverInfo = new ServerInfo();
             LastError = string.Empty;
 
-#if UNDECODED
-            postParameters.Add("action", "ping");
-            postParameters.Add("client", VersionHelper.ClientInfo);
-#else
-            string data = string.Format("action=ping&client={0}", ClientInfo);
-            postParameters.Add("_d", CoderHelper.Encode(data));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                postParameters.Add("action", "ping");
+                postParameters.Add("client", ClientInfo);
+            }
+            else
+            {
+                string data = string.Format("action=ping&client={0}", ClientInfo);
+                postParameters.Add("_d", CoderHelper.Encode(data));
+            }
 
             if (!string.IsNullOrEmpty(testUrl))
             {
@@ -317,15 +320,19 @@ namespace OasCommonLib.WebService
             string session = string.Empty;
             string DataServiceUrl = _cfg.DataServiceUrl;
 
-#if UNDECODED
-            reqparm.Add("action", "login");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("login", login);
-            reqparm.Add("passwd", passwd);
-#else
-            string data = string.Format("action=login&login={0}&passwd={1}&client={2}", login, passwd, ClientInfo);
-            reqparm.Add("_d", CoderHelper.Encode(data));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "login");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("login", login);
+                reqparm.Add("passwd", passwd);
+            }
+            else
+            {
+                string data = string.Format("action=login&login={0}&passwd={1}&client={2}", login, passwd, ClientInfo);
+                reqparm.Add("_d", CoderHelper.Encode(data));
+            }
+
             try
             {
                 using (WebClientEx client = new WebClientEx(cookies))
@@ -398,15 +405,18 @@ namespace OasCommonLib.WebService
             json = string.Empty;
             session = string.Empty;
 
-#if UNDECODED
-            reqparm.Add("action", "login");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("login", login);
-            reqparm.Add("passwd", passwd);
-#else
-            string data = string.Format("action=login&login={0}&passwd={1}&client={2}", login, passwd, ClientInfo);
-            reqparm.Add("_d", CoderHelper.Encode(data));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "login");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("login", login);
+                reqparm.Add("passwd", passwd);
+            }
+            else
+            {
+                string data = string.Format("action=login&login={0}&passwd={1}&client={2}", login, passwd, ClientInfo);
+                reqparm.Add("_d", CoderHelper.Encode(data));
+            }
 
             try
             {
@@ -561,14 +571,17 @@ namespace OasCommonLib.WebService
             }
 
 
-#if UNDECODED
-            reqparm.Add("action", "read_vin_info");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("vin", vin);
-#else
-            string data = string.Format("action=read_vin_info&vin={0}&client={1}", vin, ClientInfo);
-            reqparm.Add("_d", CoderHelper.Encode(data));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "read_vin_info");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("vin", vin);
+            }
+            else
+            {
+                string data = string.Format("action=read_vin_info&vin={0}&client={1}", vin, ClientInfo);
+                reqparm.Add("_d", CoderHelper.Encode(data));
+            }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
             cookies.Add(cc);
@@ -632,17 +645,20 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-#if UNDECODED
-            reqparm.Add("action", "save_vin_info");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("vin", vinInfo.Vin);
-            reqparm.Add("year", vinInfo.Year.ToString());
-            reqparm.Add("make", vinInfo.Make);
-            reqparm.Add("model", vinInfo.Model);
-#else
-            string data = string.Format("action=save_vin_info&client={0}&vin={1}&year={2}&make={3}&model={4}", ClientInfo, vinInfo.Vin, vinInfo.Year, vinInfo.Make, vinInfo.Model);
-            reqparm.Add("_d", CoderHelper.Encode(data));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "save_vin_info");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("vin", vinInfo.Vin);
+                reqparm.Add("year", vinInfo.Year.ToString());
+                reqparm.Add("make", vinInfo.Make);
+                reqparm.Add("model", vinInfo.Model);
+            }
+            else
+            {
+                string data = string.Format("action=save_vin_info&client={0}&vin={1}&year={2}&make={3}&model={4}", ClientInfo, vinInfo.Vin, vinInfo.Year, vinInfo.Make, vinInfo.Model);
+                reqparm.Add("_d", CoderHelper.Encode(data));
+            }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
             cookies.Add(cc);
@@ -712,17 +728,20 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-#if UNDECODED
-            reqparm.Add("action", "update_vin_info");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("vin", vinInfo.Vin);
-            reqparm.Add("year", vinInfo.Year.ToString());
-            reqparm.Add("make", vinInfo.Make);
-            reqparm.Add("model", vinInfo.Model);
-#else
-            string data = string.Format("action=update_vin_info&client={0}&vin={1}&year={2}&make={3}&model={4}", ClientInfo, vinInfo.Vin, vinInfo.Year, vinInfo.Make, vinInfo.Model);
-            reqparm.Add("_d", CoderHelper.Encode(data));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "update_vin_info");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("vin", vinInfo.Vin);
+                reqparm.Add("year", vinInfo.Year.ToString());
+                reqparm.Add("make", vinInfo.Make);
+                reqparm.Add("model", vinInfo.Model);
+            }
+            else
+            {
+                string data = string.Format("action=update_vin_info&client={0}&vin={1}&year={2}&make={3}&model={4}", ClientInfo, vinInfo.Vin, vinInfo.Year, vinInfo.Make, vinInfo.Model);
+                reqparm.Add("_d", CoderHelper.Encode(data));
+            }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
             cookies.Add(cc);
@@ -789,15 +808,17 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-#if UNDECODED
-            reqparm.Add("action", "read_vin_info");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("vin", vin);
-#else
-            string data = string.Format("action=read_vin_info&client={0}&vin={1}", ClientInfo, vin);
-            reqparm.Add("_d", CoderHelper.Encode(data));
-#endif
-
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "read_vin_info");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("vin", vin);
+            }
+            else
+            {
+                string data = string.Format("action=read_vin_info&client={0}&vin={1}", ClientInfo, vin);
+                reqparm.Add("_d", CoderHelper.Encode(data));
+            }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
@@ -922,12 +943,14 @@ namespace OasCommonLib.WebService
                 requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + imageName;
             }
 
-#if UNDECODED
-            downloadUrl = DataServiceUrl + requestParameters;
-
-#else
-            downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                downloadUrl = DataServiceUrl + requestParameters;
+            }
+            else
+            {
+                downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
+            }
 
             try
             {
@@ -953,7 +976,8 @@ namespace OasCommonLib.WebService
 
                             jObj = JObject.Parse(text);
                         }
-                        error = (string)jObj["error"].Value<string>();
+
+                        error = jObj["error"].Value<string>();
                     }
                     stage = 3;
                     if (null != error)
@@ -1002,11 +1026,14 @@ namespace OasCommonLib.WebService
             LastError = "";
             string requestParameters = "da/" + envelopeId.ToString() + "/" + audioName;
 
-#if UNDECODED
-            downloadUrl = DataServiceUrl + requestParameters;
-#else
-            downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                downloadUrl = DataServiceUrl + requestParameters;
+            }
+            else
+            {
+                downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
+            }
 
             try
             {
@@ -1028,15 +1055,16 @@ namespace OasCommonLib.WebService
                         jObj = JObject.Parse(text);
                     }
 
-                    JObject error = (JObject)jObj["error"];
-
-                    if (null != error)
+                    string error = jObj["error"].Value<string>();
+                    if (!string.IsNullOrEmpty(error))
                     {
-                        throw new Exception("server download failed : " + error.Value<string>());
+                        _log.Add(TAG, "server download failed : " + error, LogItemType.Error);
+                    }
+                    else
+                    {
+                        res = true;
                     }
                 }
-
-                res = true;
             }
             catch (JsonException jre)
             {
@@ -1092,17 +1120,17 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-#if UNDECODED
-            reqparm.Add("action", "read_audioinfo");
-            reqparm.Add("client", VersionHelper.ClientInfo);
-
-            //
-            // envelope
-            reqparm.Add("envelope_id", envelopeId.ToString());
-#else
-            string parameters = string.Format("action=read_audioinfo&client={0}&envelope_id={1}", ClientInfo, envelopeId);
-            reqparm.Add("_d", CoderHelper.Encode(parameters));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "read_audioinfo");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("envelope_id", envelopeId.ToString());
+            }
+            else
+            {
+                string parameters = string.Format("action=read_audioinfo&client={0}&envelope_id={1}", ClientInfo, envelopeId);
+                reqparm.Add("_d", CoderHelper.Encode(parameters));
+            }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
@@ -1197,21 +1225,20 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-#if UNDECODED
-            reqparm.Add("action", "clear_audioinfo");
-            reqparm.Add("client", ClientInfo);
-            reqparm.Add("envelope_id", envelopeId.ToString());
-            reqparm.Add("id", audioNoteId.ToString());
-            reqparm.Add("audio_note", audioFile);
-
-            //
-            // envelope
-            reqparm.Add("envelope_id", envelopeId.ToString());
-
-#else
-            string parameters = string.Format("action=clear_audioinfo&client={0}&envelope_id={1}&id={2}&file_name={3}", ClientInfo, envelopeId, audioNoteId, audioFile);
-            reqparm.Add("_d", CoderHelper.Encode(parameters));
-#endif
+            if (!_cfg.EncodeTraffic)
+            {
+                reqparm.Add("action", "clear_audioinfo");
+                reqparm.Add("client", ClientInfo);
+                reqparm.Add("envelope_id", envelopeId.ToString());
+                reqparm.Add("id", audioNoteId.ToString());
+                reqparm.Add("audio_note", audioFile);
+                reqparm.Add("envelope_id", envelopeId.ToString());
+            }
+            else
+            {
+                string parameters = string.Format("action=clear_audioinfo&client={0}&envelope_id={1}&id={2}&file_name={3}", ClientInfo, envelopeId, audioNoteId, audioFile);
+                reqparm.Add("_d", CoderHelper.Encode(parameters));
+            }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
