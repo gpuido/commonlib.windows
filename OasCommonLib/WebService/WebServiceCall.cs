@@ -1002,7 +1002,7 @@ namespace OasCommonLib.WebService
                 _log.AddError(
                             TAG,
                             ex,
-                            string.Format("file '{0}' download error, stage: {2}", downloadUrl, stage));
+                            string.Format("file '{0}' download error, stage: {1}", downloadUrl, stage));
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
             }
             return res;
@@ -1055,10 +1055,9 @@ namespace OasCommonLib.WebService
                         jObj = JObject.Parse(text);
                     }
 
-                    string error = jObj["error"].Value<string>();
-                    if (!string.IsNullOrEmpty(error))
+                    if (null != jObj["error"])
                     {
-                        _log.Add(TAG, "server download failed : " + error, LogItemType.Error);
+                        _log.Add(TAG, "server download failed : " + jObj["error"].Value<string>(), LogItemType.Error);
                     }
                     else
                     {
@@ -1395,7 +1394,6 @@ namespace OasCommonLib.WebService
                         {
                             cfgPreconds.Add(new PreconditionInfo()
                             {
-                                Id = c["id"].Value<long>(),
                                 CompanyId = c["company_id"].Value<long>(),
                                 Index = c["idx"].Value<int>(),
                                 Code = c["code"].Value<string>(),
