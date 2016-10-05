@@ -86,7 +86,7 @@
     <Compile Include="VinParsers\NHTSAJsonVinParser.cs" />
     <Compile Include="VinParsers\OasJsonVinParser.cs" />
     <Compile Include="VinParsers\VinInfo.cs" />
-    <Compile Include="WebService\EncodedParameterHelper.cs" />
+    <Compile Include="WebService\ActionParametersHelper.cs" />
     <Compile Include="WebService\FormUpload.cs" />
     <Compile Include="WebService\WebClientEx.cs">
       <SubType>Component</SubType>

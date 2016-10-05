@@ -51,7 +51,7 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=ping&client={0}", ClientInfo);
+                string data = ActionParametersHelper.GenerateParameters("ping", ClientInfo);
                 postParameters.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -329,7 +329,11 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=login&login={0}&passwd={1}&client={2}", login, passwd, ClientInfo);
+                string data = ActionParametersHelper.GenerateParameters("login", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("login", login),
+                    new KeyValuePair<string, object>("passwd", passwd)
+                }); 
                 reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -414,7 +418,11 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=login&login={0}&passwd={1}&client={2}", login, passwd, ClientInfo);
+                string data = ActionParametersHelper.GenerateParameters("login", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("login", login),
+                    new KeyValuePair<string, object>("passwd", passwd)
+                });
                 reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -579,7 +587,10 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=read_vin_info&vin={0}&client={1}", vin, ClientInfo);
+                string data = ActionParametersHelper.GenerateParameters("read_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("vin", vin)
+                });
                 reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -656,7 +667,13 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=save_vin_info&client={0}&vin={1}&year={2}&make={3}&model={4}", ClientInfo, vinInfo.Vin, vinInfo.Year, vinInfo.Make, vinInfo.Model);
+                string data = ActionParametersHelper.GenerateParameters("save_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("vin", vinInfo.Vin),
+                    new KeyValuePair<string, object>("year", vinInfo.Year),
+                    new KeyValuePair<string, object>("make", vinInfo.Make),
+                    new KeyValuePair<string, object>("model", vinInfo.Model)
+                });
                 reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -739,7 +756,13 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=update_vin_info&client={0}&vin={1}&year={2}&make={3}&model={4}", ClientInfo, vinInfo.Vin, vinInfo.Year, vinInfo.Make, vinInfo.Model);
+                string data = ActionParametersHelper.GenerateParameters("update_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("vin", vinInfo.Vin),
+                    new KeyValuePair<string, object>("year", vinInfo.Year),
+                    new KeyValuePair<string, object>("make", vinInfo.Make),
+                    new KeyValuePair<string, object>("model", vinInfo.Model)
+                });
                 reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -816,7 +839,10 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string data = string.Format("action=read_vin_info&client={0}&vin={1}", ClientInfo, vin);
+                string data = ActionParametersHelper.GenerateParameters("read_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("vin", vin)
+                });
                 reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
@@ -1127,8 +1153,11 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string parameters = string.Format("action=read_audioinfo&client={0}&envelope_id={1}", ClientInfo, envelopeId);
-                reqparm.Add("_d", CoderHelper.Encode(parameters));
+                string data = ActionParametersHelper.GenerateParameters("read_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("envelope_id", envelopeId)
+                });
+                reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
@@ -1235,8 +1264,13 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                string parameters = string.Format("action=clear_audioinfo&client={0}&envelope_id={1}&id={2}&file_name={3}", ClientInfo, envelopeId, audioNoteId, audioFile);
-                reqparm.Add("_d", CoderHelper.Encode(parameters));
+                string data = ActionParametersHelper.GenerateParameters("clear_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("envelope_id", envelopeId),
+                    new KeyValuePair<string, object>("id", audioNoteId),
+                    new KeyValuePair<string, object>("file_name", audioFile)
+                });
+                reqparm.Add("_d", CoderHelper.Encode(data));
             }
 
             cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));

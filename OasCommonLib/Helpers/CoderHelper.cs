@@ -17,7 +17,6 @@
             string encodedData;
             int encodeCharsNumber;
             string encodeHead;
-            string encodeTail;
 
             if (null == data)
             {
@@ -28,43 +27,27 @@
 
             encodeCharsNumber = _random.Next(2, 8);
 
-            encodeHead = GetHead(data, encodeCharsNumber);
-            encodeTail = GetTail(data, encodeCharsNumber);
+            encodeHead = GetHead(encodeCharsNumber);
 
-            encodedData = string.Format("{0}{1}{2}{3}{4}",
+            encodedData = string.Format("{0}{1}{2}{3}",
                 ENCODE_SIGN,
                 encodeCharsNumber,
-                encodeTail,
                 encodeHead,
                 data);
 
             return encodedData;
         }
 
-        private static string GetTail(string data, int encodeCharsNumber)
+        private static string GetHead(int encodeCharsNumber)
         {
-            if (data.Length < encodeCharsNumber)
+            string head = string.Empty;
+
+            for (int i = 0; i < encodeCharsNumber * 2; ++i)
             {
-                throw new ArgumentOutOfRangeException(
-                    string.Format(
-                    "string length {0} is shorter then index {1}",
-                    data.Length, encodeCharsNumber));
+                head += (char)(_random.Next(0, 15) + 'A');
             }
 
-            return data.Substring(data.Length - encodeCharsNumber);
-        }
-
-        private static string GetHead(string data, int encodeCharsNumber)
-        {
-            if (data.Length < encodeCharsNumber)
-            {
-                throw new ArgumentOutOfRangeException(
-                    string.Format(
-                    "string length {0} is shorter then index {1}",
-                    data.Length, encodeCharsNumber));
-            }
-
-            return data.Substring(0, encodeCharsNumber);
+            return head;
         }
 
         private static string EncodeData(string data)

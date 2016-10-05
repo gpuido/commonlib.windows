@@ -66,6 +66,9 @@
         private int _lastDay;
         private int _elapseTimerMin;
 
+        private string _startMessage;
+
+
         #region static part
         private static volatile LogQueue _logQueue = null;
         private static object syncRoot = new Object();
@@ -104,6 +107,7 @@
 
             _lastDay = DateTime.Now.Day;
 
+            _startMessage = StartMessage();
         }
 
         public static string MakeLogFileName()
@@ -224,6 +228,13 @@
             {
                 LogItem item;
                 List<string> items = new List<string>();
+
+                if (!string.IsNullOrEmpty(_startMessage))
+                {
+                    items.Add(_startMessage);
+                    _startMessage = null;
+                }
+
                 while (!LogItemList.IsEmpty)
                 {
                     if (LogItemList.TryTake(out item))
@@ -232,14 +243,9 @@
                     }
                 }
 
-                if (null != _oasEvent)
-                {
-                    _oasEvent.RaiseEvent(OasEventType.NewLogItem, items[items.Count - 1]);
-                }
-
                 if (_lastDay != DateTime.Now.Day)
                 {
-                    Insert(0, TAG, StartMessage());
+                    _startMessage = StartMessage();
                     _lastDay = DateTime.Now.Day;
                 }
                 File.AppendAllLines(Path.Combine(_cfg.LogPath, fname), items);
@@ -254,7 +260,7 @@
             }
         }
 
-        public string StartMessage()
+        private string StartMessage()
         {
             return string.Format(
                 "version:{0} started @ {1}, on {2}\n server: {3}, local server: {4}",
