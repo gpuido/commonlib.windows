@@ -187,12 +187,14 @@ namespace OasCommonLib.Config
         public bool RunServer;
         public int Port;
         public List<string> Ips;
+        public bool WebServerLog;
 
         public WebServerData()
         {
             RunServer = false;
             Port = 18080;
             Ips = new List<string>();
+            WebServerLog = false;
         }
 
         public void InitDefault(string dataPath)
@@ -205,6 +207,12 @@ namespace OasCommonLib.Config
             if (null != jt)
             {
                 RunServer = jt.Value<bool>();
+            }
+
+            jt = webServer["WebServerLog"];
+            if (null != jt)
+            {
+                WebServerLog = jt.Value<bool>();
             }
 
             jt = webServer["Port"];
@@ -1287,6 +1295,25 @@ namespace OasCommonLib.Config
                 if (value != Data.WebServer.Port)
                 {
                     Data.WebServer.Port = value;
+                    if (Data.WebServer.RunServer)
+                    {
+                        _oasEvent.RaiseEvent(OasEventType.WebServerChanged);
+                    }
+                }
+            }
+        }
+
+        public bool WebServerLog
+        {
+            get
+            {
+                return Data.WebServer.WebServerLog;
+            }
+            set
+            {
+                if (value != Data.WebServer.WebServerLog)
+                {
+                    Data.WebServer.WebServerLog = value;
                     if (Data.WebServer.RunServer)
                     {
                         _oasEvent.RaiseEvent(OasEventType.WebServerChanged);
