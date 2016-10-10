@@ -906,7 +906,7 @@ namespace OasCommonLib.WebService
         #endregion
 
         #region download data files
-        public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
+        public static bool DownloadPrecondition(long envelopeId, int precNumber, string pathToImage)
         {
             Debug.Assert(envelopeId > 0);
             return DownloadInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
