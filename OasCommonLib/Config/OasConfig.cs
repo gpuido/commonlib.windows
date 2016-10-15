@@ -294,13 +294,16 @@ namespace OasCommonLib.Config
 
         public bool StampImages { get; set; }
 
-        public string CurrentVersion { get; set; }
+        public string CurrentVersion { get; private set; }
 
-        public OasConfigData()
+        public OasConfigData(string currentVersion)
         {
             CaseConfig = new CaseConfigData();
             WebConfig = new WebServiceData();
             WebServer = new WebServerData();
+
+            CurrentVersion = currentVersion;
+
             DoNotConnect = false;
             ShowNotification = false;
             CloseToTray = true;
@@ -345,19 +348,20 @@ namespace OasCommonLib.Config
 
         public bool IsChanged { get; private set; }
 
-        public OasConfigType OasConfigType { get; private set; }
-        public string CurrentVersion { get; private set; }
+        public readonly OasConfigType OasConfigType;
+        public readonly string CurrentVersion;
 
         public OasConfig(OasConfigType cfgType, string currentVersion)
         {
             OasConfigType = cfgType;
+
             CurrentVersion = currentVersion;
 
             IsChanged = false;
             IsAdmin = false;
             LocalClientMode = false;
 
-            Data = new OasConfigData();
+            Data = new OasConfigData(currentVersion);
 #if DEBUG
             DataFolderPath = @"..\..\OAS";
 #else
@@ -403,7 +407,7 @@ namespace OasCommonLib.Config
                     //                    SaveError(configName);
                     var json = File.ReadAllText(configName);
                     //                    SaveError(json);
-                    Data = ParseJson(json); //  JsonConvert.DeserializeObject<OasConfigData>(json);
+                    Data = ParseJson(json, CurrentVersion); //  JsonConvert.DeserializeObject<OasConfigData>(json);
                 }
 
             }
@@ -503,9 +507,9 @@ namespace OasCommonLib.Config
             }
         }
 
-        public static OasConfigData ParseJson(string json)
+        public static OasConfigData ParseJson(string json, string currentVersion)
         {
-            OasConfigData ocd = new OasConfigData();
+            OasConfigData ocd = new OasConfigData(currentVersion);
             JObject o = JObject.Parse(json);
 
             JToken caseConfig = o["CaseConfig"];
@@ -651,12 +655,6 @@ namespace OasCommonLib.Config
                 ocd.StampImages = jt.Value<bool>();
             }
 
-            jt = o["CurrentVersion"];
-            if (null != jt)
-            {
-                ocd.CurrentVersion = jt.Value<string>();
-            }
-
             return ocd;
         }
 
@@ -684,7 +682,6 @@ namespace OasCommonLib.Config
             Data.CloseToTray = true;
             Data.SortHeader = 7;
 
-            Data.CurrentVersion = CurrentVersion;
 #if DEBUG
             Data.HowManyDaysToShow = OasConfigType == OasConfigType.evcp ? 1 : 100;
             Data.ServerPollTimeout = 60; //secs

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OasCommonLib.Constants;
 using OasCommonLib.Data;
 using OasCommonLib.Data.Config;
 using OasCommonLib.Helpers;
@@ -46,13 +47,13 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                postParameters.Add("action", "ping");
-                postParameters.Add("client", ClientInfo);
+                postParameters.Add(WebStringConstants.ACTION, "ping");
+                postParameters.Add(WebStringConstants.CLIENT, ClientInfo);
             }
             else
             {
                 string data = ActionParametersHelper.GenerateParameters("ping", ClientInfo);
-                postParameters.Add("_d", CoderHelper.Encode(data));
+                postParameters.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
             if (!string.IsNullOrEmpty(testUrl))
@@ -148,7 +149,7 @@ namespace OasCommonLib.WebService
 
             Debug.Assert(envelopeId > 0);
 
-            LastError = "";
+            LastError = string.Empty;
             uploadedId = 0L;
 
             switch (infoType)
@@ -192,15 +193,15 @@ namespace OasCommonLib.WebService
             }
 
             var nvc = new NameValueCollection();
-            nvc.Add("action", uploadType);
-            nvc.Add("client", ClientInfo);
-            nvc.Add("envelope_id", envelopeId.ToString());
-            nvc.Add("tz", tz);
-            nvc.Add("proof", proof);
+            nvc.Add(WebStringConstants.ACTION, uploadType);
+            nvc.Add(WebStringConstants.CLIENT, ClientInfo);
+            nvc.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
+            nvc.Add(WebStringConstants.TZ, tz);
+            nvc.Add(WebStringConstants.PROOF, proof);
             nvc.Add("filename", fileName);
             if (dbReference > 0)
             {
-                nvc.Add("db_reference", dbReference.ToString());
+                nvc.Add(WebStringConstants.DB_REFERENCE, dbReference.ToString());
             }
 
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
@@ -217,7 +218,7 @@ namespace OasCommonLib.WebService
                 request.CookieContainer = new CookieContainer();
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             request.CookieContainer.Add(cc);
 
             using (Stream rs = request.GetRequestStream())
@@ -322,19 +323,19 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "login");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("login", login);
-                reqparm.Add("passwd", passwd);
+                reqparm.Add(WebStringConstants.ACTION, "login");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.LOGIN, login);
+                reqparm.Add(WebStringConstants.PASSWD, passwd);
             }
             else
             {
-                string data = ActionParametersHelper.GenerateParameters("login", ClientInfo, new List<KeyValuePair<string, object>>()
+                string data = ActionParametersHelper.GenerateParameters(WebStringConstants.LOGIN, ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("login", login),
-                    new KeyValuePair<string, object>("passwd", passwd)
+                    new KeyValuePair<string, object>(WebStringConstants.LOGIN, login),
+                    new KeyValuePair<string, object>(WebStringConstants.PASSWD, passwd)
                 }); 
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
             try
@@ -345,7 +346,7 @@ namespace OasCommonLib.WebService
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
 
-                var cookie = cookies.List().FirstOrDefault((it) => it.Name.Equals("session"));
+                var cookie = cookies.List().FirstOrDefault((it) => it.Name.Equals(WebStringConstants.SESSION));
                 CookieDomain = cookie.Domain;
                 session = cookie.Value;
             }
@@ -411,19 +412,19 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "login");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("login", login);
-                reqparm.Add("passwd", passwd);
+                reqparm.Add(WebStringConstants.ACTION, "login");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.LOGIN, login);
+                reqparm.Add(WebStringConstants.PASSWD, passwd);
             }
             else
             {
-                string data = ActionParametersHelper.GenerateParameters("login", ClientInfo, new List<KeyValuePair<string, object>>()
+                string data = ActionParametersHelper.GenerateParameters(WebStringConstants.LOGIN, ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("login", login),
-                    new KeyValuePair<string, object>("passwd", passwd)
+                    new KeyValuePair<string, object>(WebStringConstants.LOGIN, login),
+                    new KeyValuePair<string, object>(WebStringConstants.PASSWD, passwd)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
             try
@@ -434,7 +435,7 @@ namespace OasCommonLib.WebService
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
 
-                var cookie = cookies.List().FirstOrDefault((it) => it.Name.Equals("session"));
+                var cookie = cookies.List().FirstOrDefault((it) => it.Name.Equals(WebStringConstants.SESSION));
                 CookieDomain = cookie.Domain;
                 session = cookie.Value;
             }
@@ -525,7 +526,7 @@ namespace OasCommonLib.WebService
             string url = "http://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{0}?format=json";
             string getUrl = string.Format(url, vin);
 
-            LastError = "";
+            LastError = string.Empty;
             vinInfo = null;
 
             try
@@ -563,7 +564,7 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = "";
+            LastError = string.Empty;
             vinInfo = null;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -581,9 +582,9 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "read_vin_info");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("vin", vin);
+                reqparm.Add(WebStringConstants.ACTION, "read_vin_info");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.VIN, vin);
             }
             else
             {
@@ -591,10 +592,10 @@ namespace OasCommonLib.WebService
                 {
                     new KeyValuePair<string, object>("vin", vin)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -642,7 +643,7 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = "";
+            LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -658,26 +659,26 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "save_vin_info");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("vin", vinInfo.Vin);
-                reqparm.Add("year", vinInfo.Year.ToString());
-                reqparm.Add("make", vinInfo.Make);
-                reqparm.Add("model", vinInfo.Model);
+                reqparm.Add(WebStringConstants.ACTION, "save_vin_info");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.VIN, vinInfo.Vin);
+                reqparm.Add(WebStringConstants.YEAR, vinInfo.Year.ToString());
+                reqparm.Add(WebStringConstants.MAKE, vinInfo.Make);
+                reqparm.Add(WebStringConstants.MODEL, vinInfo.Model);
             }
             else
             {
                 string data = ActionParametersHelper.GenerateParameters("save_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("vin", vinInfo.Vin),
-                    new KeyValuePair<string, object>("year", vinInfo.Year),
-                    new KeyValuePair<string, object>("make", vinInfo.Make),
-                    new KeyValuePair<string, object>("model", vinInfo.Model)
+                    new KeyValuePair<string, object>(WebStringConstants.VIN, vinInfo.Vin),
+                    new KeyValuePair<string, object>(WebStringConstants.YEAR, vinInfo.Year),
+                    new KeyValuePair<string, object>(WebStringConstants.MAKE, vinInfo.Make),
+                    new KeyValuePair<string, object>(WebStringConstants.MODEL, vinInfo.Model)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -731,7 +732,7 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = "";
+            LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -747,26 +748,26 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "update_vin_info");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("vin", vinInfo.Vin);
-                reqparm.Add("year", vinInfo.Year.ToString());
-                reqparm.Add("make", vinInfo.Make);
-                reqparm.Add("model", vinInfo.Model);
+                reqparm.Add(WebStringConstants.ACTION, "update_vin_info");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.VIN, vinInfo.Vin);
+                reqparm.Add(WebStringConstants.YEAR, vinInfo.Year.ToString());
+                reqparm.Add(WebStringConstants.MAKE, vinInfo.Make);
+                reqparm.Add(WebStringConstants.MODEL, vinInfo.Model);
             }
             else
             {
                 string data = ActionParametersHelper.GenerateParameters("update_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("vin", vinInfo.Vin),
-                    new KeyValuePair<string, object>("year", vinInfo.Year),
-                    new KeyValuePair<string, object>("make", vinInfo.Make),
-                    new KeyValuePair<string, object>("model", vinInfo.Model)
+                    new KeyValuePair<string, object>(WebStringConstants.VIN, vinInfo.Vin),
+                    new KeyValuePair<string, object>(WebStringConstants.YEAR, vinInfo.Year),
+                    new KeyValuePair<string, object>(WebStringConstants.MAKE, vinInfo.Make),
+                    new KeyValuePair<string, object>(WebStringConstants.MODEL, vinInfo.Model)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -816,7 +817,7 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = "";
+            LastError = string.Empty;
             vinInfo = null;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -833,20 +834,20 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "read_vin_info");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("vin", vin);
+                reqparm.Add(WebStringConstants.ACTION, "read_vin_info");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.VIN, vin);
             }
             else
             {
                 string data = ActionParametersHelper.GenerateParameters("read_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("vin", vin)
+                    new KeyValuePair<string, object>(WebStringConstants.VIN, vin)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -990,7 +991,7 @@ namespace OasCommonLib.WebService
                 {
                     stage = 2;
                     string text = File.ReadAllText(pathToImage);
-                    string error = "";
+                    string error = string.Empty;
                     if (!string.IsNullOrEmpty(text))
                     {
                         JObject jObj = JObject.Parse(text);
@@ -1049,7 +1050,7 @@ namespace OasCommonLib.WebService
                 DataServiceUrl += "/";
             }
 
-            LastError = "";
+            LastError = string.Empty;
             string requestParameters = "da/" + envelopeId.ToString() + "/" + audioName;
 
             if (!_cfg.EncodeTraffic)
@@ -1131,7 +1132,7 @@ namespace OasCommonLib.WebService
             CookieCollection cc = new CookieCollection();
 
             anList = null;
-            LastError = "";
+            LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1147,20 +1148,20 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "read_audioinfo");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("envelope_id", envelopeId.ToString());
+                reqparm.Add(WebStringConstants.ACTION, "read_audioinfo");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
             }
             else
             {
                 string data = ActionParametersHelper.GenerateParameters("read_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("envelope_id", envelopeId)
+                    new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, envelopeId)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -1239,7 +1240,7 @@ namespace OasCommonLib.WebService
             CookieCollection cc = new CookieCollection();
             int deletedAudioNoteId = 0;
 
-            LastError = "";
+            LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1255,25 +1256,24 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add("action", "clear_audioinfo");
-                reqparm.Add("client", ClientInfo);
-                reqparm.Add("envelope_id", envelopeId.ToString());
-                reqparm.Add("id", audioNoteId.ToString());
+                reqparm.Add(WebStringConstants.ACTION, "clear_audioinfo");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
+                reqparm.Add(WebStringConstants.ID, audioNoteId.ToString());
                 reqparm.Add("audio_note", audioFile);
-                reqparm.Add("envelope_id", envelopeId.ToString());
             }
             else
             {
                 string data = ActionParametersHelper.GenerateParameters("clear_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("envelope_id", envelopeId),
-                    new KeyValuePair<string, object>("id", audioNoteId),
-                    new KeyValuePair<string, object>("file_name", audioFile)
+                    new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, envelopeId),
+                    new KeyValuePair<string, object>(WebStringConstants.ID, audioNoteId),
+                    new KeyValuePair<string, object>("audio_note", audioFile)
                 });
-                reqparm.Add("_d", CoderHelper.Encode(data));
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -1335,7 +1335,7 @@ namespace OasCommonLib.WebService
             cfgAddActivities = new List<AdditionalActivity>();
             cfgOperCodes = new List<OperationCode>();
             cfgPreconds = new List<PreconditionInfo>();
-            LastError = "";
+            LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1349,10 +1349,10 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-            reqparm.Add("action", "read_full_config");
-            reqparm.Add("client", ClientInfo);
+            reqparm.Add(WebStringConstants.ACTION, "read_full_config");
+            reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
             try
             {
@@ -1465,7 +1465,7 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = "";
+            LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1485,7 +1485,7 @@ namespace OasCommonLib.WebService
             reqparm.Add("STACK_TRACE", ex.StackTrace);
             reqparm.Add("LOGCAT", ex.Message);
 
-            cc.Add(new Cookie("session", sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
             cookies.Add(cc);
             try
             {

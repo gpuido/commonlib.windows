@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Config\IConfigData.cs" />
     <Compile Include="Config\OasConfig.cs" />
+    <Compile Include="Constants\WebStringConstants.cs" />
     <Compile Include="Data\AudioNote.cs" />
     <Compile Include="Data\CommonInfo.cs" />
     <Compile Include="Data\CommonUploadInfo.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Helpers\ImageHelper.cs" />
     <Compile Include="Helpers\NewVersionHelper.cs" />
     <Compile Include="Helpers\OASImage.cs" />
+    <Compile Include="Helpers\OlsonTimeZoneHelper.cs" />
     <Compile Include="Helpers\OSInfo.cs" />
     <Compile Include="Helpers\UtcHelper.cs" />
     <Compile Include="Helpers\ZipHelper.cs" />

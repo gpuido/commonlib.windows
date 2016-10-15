@@ -1,5 +1,6 @@
 ﻿namespace OasCommonLib.WebService
 {
+    using Constants;
     using System;
     using System.Collections.Generic;
     using System.Text;
@@ -18,11 +19,11 @@
                 throw new ArgumentException("action name can not be empty");
             }
 
-            paramString.AppendFormat("action={0}", actionName);
+            paramString.AppendFormat("{0}={01", WebStringConstants.ACTION, actionName);
 
             if (!string.IsNullOrEmpty(clientInfo))
             {
-                paramString.AppendFormat("&client={0}", clientInfo);
+                paramString.AppendFormat("&{0}={1}", WebStringConstants.CLIENT, clientInfo);
             }
 
             if (null != paramList)
