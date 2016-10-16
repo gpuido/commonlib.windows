@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OasCommonLib", "OasCommonLi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7BA604F6-BA29-410E-8718-705B5C9E0E92}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VehicleBuildParseTest", "VehicleBuildParseTest\VehicleBuildParseTest.csproj", "{F9CEAD22-C7CD-497C-8FBB-F835ED497EB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,8 +19,15 @@ Global
 		{6D6524A4-A5EB-43FB-8E3B-5C34C9882183}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D6524A4-A5EB-43FB-8E3B-5C34C9882183}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D6524A4-A5EB-43FB-8E3B-5C34C9882183}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9CEAD22-C7CD-497C-8FBB-F835ED497EB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9CEAD22-C7CD-497C-8FBB-F835ED497EB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9CEAD22-C7CD-497C-8FBB-F835ED497EB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9CEAD22-C7CD-497C-8FBB-F835ED497EB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F9CEAD22-C7CD-497C-8FBB-F835ED497EB4} = {7BA604F6-BA29-410E-8718-705B5C9E0E92}
 	EndGlobalSection
 EndGlobal
