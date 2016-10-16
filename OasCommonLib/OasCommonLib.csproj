@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Config\IConfigData.cs" />
     <Compile Include="Config\OasConfig.cs" />
+    <Compile Include="Constants\JsonStringConstants.cs" />
     <Compile Include="Constants\WebStringConstants.cs" />
     <Compile Include="Data\AudioNote.cs" />
     <Compile Include="Data\CommonInfo.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="VinParsers\NHTSAJsonVinParser.cs" />
     <Compile Include="VinParsers\OasJsonVinParser.cs" />
     <Compile Include="VinParsers\VinInfo.cs" />
+    <Compile Include="VinParsers\BuildYearRecoverHelper.cs" />
     <Compile Include="WebService\ActionParametersHelper.cs" />
     <Compile Include="WebService\FormUpload.cs" />
     <Compile Include="WebService\WebClientEx.cs">

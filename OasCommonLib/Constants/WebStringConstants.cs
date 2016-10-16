@@ -41,5 +41,6 @@
         public static readonly string ASSIGNED_COMPANY_ID = "assigned_company_id";
 
         public static readonly string ENC_DATA = "_d";
+        public static readonly string POST = "post";
     }
 }
