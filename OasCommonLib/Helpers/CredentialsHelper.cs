@@ -8,18 +8,23 @@
     {
         static readonly Random _random = new Random();
 
-        public static bool ReadCredentials(string cred, out string login, out string passwd)
+        public static bool ReadCredentials(string credentialInfo, out string login, out string passwd)
         {
             bool ok = false;
 
-            login = null;
-            passwd = null;
+            login = string.Empty;
+            passwd = string.Empty;
+
+            if (string.IsNullOrEmpty(credentialInfo))
+            {
+                return false;
+            }
 
             try
             {
-                if (cred[0] == '_')
+                if (credentialInfo[0] == '_')
                 {
-                    var tmpString = cred.Substring(5);
+                    var tmpString = credentialInfo.Substring(5);
                     var base64EncodedBytes = Convert.FromBase64String(tmpString);
                     string decodedString = Encoding.UTF8.GetString(base64EncodedBytes);
 

@@ -320,7 +320,7 @@ namespace OasCommonLib.Config
         }
     }
 
-    public enum OasConfigType { evcp, ev };
+    public enum OasConfigType { evcp, ev, evcl };
 
     public sealed class OasConfig : IDisposable
     {

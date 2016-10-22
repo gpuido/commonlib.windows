@@ -67,7 +67,7 @@
             return folder;
         }
 
-        public static string AudioPath(long envelopeId, string audioName)
+        public static string CaseAudioPath(long envelopeId, string audioName)
         {
             var folder = CaseAudioFolder(envelopeId);
             return Path.Combine(folder, audioName);                
@@ -75,7 +75,7 @@
 
         public static bool IsAudioMissing(long envelopeId, string audioName)
         {
-            string audioPath = AudioPath(envelopeId, audioName);
+            string audioPath = CaseAudioPath(envelopeId, audioName);
             bool fileExists = File.Exists(audioPath);
             bool fileHasCorrectSize = FileHelper.Length(audioPath) > FileHelper.MinimalLength;
             return !(fileExists && fileHasCorrectSize);

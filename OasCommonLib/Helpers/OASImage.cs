@@ -13,6 +13,14 @@
         public string FileName { get; private set; }
         public bool IsDirectory { get; private set; }
 
+        public string PathToFile
+        {
+            get
+            {
+                return Path.Combine(Folder, FileName);
+            }
+        }
+
         public OASImage(string folder, string fileName, bool isDir = false)
         {
             if (isDir)
@@ -58,34 +66,6 @@
             }
 
             return false;
-        }
-
-        public string FullName
-        {
-            get
-            {
-                return Path.Combine(Folder, FileName);
-            }
-        }
-
-        public static string GetName(String name)
-        {
-            int index = name.LastIndexOf('\\');
-
-            if (index != -1)
-            {
-                name = name.Substring(index + 1);
-            }
-            else
-            {
-                index = name.LastIndexOf('/');
-                if (index != -1)
-                {
-                    name = name.Substring(index + 1);
-                }
-            }
-
-            return name;
         }
 
         public void FixFileName(char p1, char p2)
@@ -149,7 +129,7 @@
             int removedImages = 0;
 
             var caseFolder = ImageHelper.CaseImageFolder(envelopeId);
-            var imageList = GetImageList(caseFolder, _cfg.ImageExts).Select(x => new CaseImage(Path.GetFileName(x.FullName))).ToList();
+            var imageList = GetImageList(caseFolder, _cfg.ImageExts).Select(x => new CaseImage(ImageHelper.CaseImagePath(envelopeId, x.FileName))).ToList();
             foreach (var il in imageList)
             {
                 if (il.Image.StartsWith(caseName))
@@ -157,7 +137,6 @@
                     il.Found = true;
                 }
             }
-
 
             foreach (var il in imageList)
             {

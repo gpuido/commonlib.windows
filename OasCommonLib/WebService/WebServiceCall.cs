@@ -90,17 +90,17 @@ namespace OasCommonLib.WebService
             {
                 JObject jObj = JObject.Parse(responsebody);
 
-                if (null != jObj["_d"])
+                if (null != jObj[WebStringConstants.ENC_DATA])
                 {
-                    string encodedResponse = jObj["_d"].Value<string>();
+                    string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                     responsebody = CoderHelper.Decode(encodedResponse);
 
                     jObj = JObject.Parse(responsebody);
                 }
 
-                if (null != jObj["result"])
+                if (null != jObj[JsonStringConstants.RESULT])
                 {
-                    var ok = jObj["result"].Value<string>();
+                    var ok = jObj[JsonStringConstants.RESULT].Value<string>();
                     if (ok.Equals("ok", StringComparison.OrdinalIgnoreCase))
                     {
                         serverInfo.ServerVersion = jObj["version"].Value<string>();
@@ -209,7 +209,7 @@ namespace OasCommonLib.WebService
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
             request.ContentType = "multipart/form-data; boundary=" + boundary;
-            request.Method = "POST";
+            request.Method = WebStringConstants.POST;
             request.KeepAlive = true;
             request.Credentials = CredentialCache.DefaultCredentials;
 
@@ -270,15 +270,15 @@ namespace OasCommonLib.WebService
 
                 JObject jObj = JObject.Parse(responsebody);
 
-                if (null != jObj["error"])
+                if (null != jObj[JsonStringConstants.ERROR])
                 {
-                    LastError = jObj["error"].Value<string>();
-                    _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                    _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                     return res;
                 }
-                if (null != jObj["result"])
+                if (null != jObj[JsonStringConstants.RESULT])
                 {
-                    var result = jObj["result"];
+                    var result = jObj[JsonStringConstants.RESULT];
 
                     uploadedSize = result["received_size"].Value<int>();
                     if (uploadedSize == FileHelper.Length(pathToFile))
@@ -303,7 +303,10 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                if (!ex.Message.Contains("timed out"))
+                {
+                    Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                }
                 LastError = ex.Message;
                 _log.AddError(TAG, ex, "fileupload failed");
             }
@@ -342,7 +345,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
 
@@ -363,22 +366,22 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
 
                 jObj = JObject.Parse(responsebody);
             }
 
-            if (null != jObj["error"])
+            if (null != jObj[JsonStringConstants.ERROR])
             {
-                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                 return si;
             }
-            if (null != jObj["result"])
+            if (null != jObj[JsonStringConstants.RESULT])
             {
-                var result = jObj["result"];
+                var result = jObj[JsonStringConstants.RESULT];
 
                 string[] roles = result["roles"].Value<string>().Split(',');
 
@@ -431,7 +434,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
 
@@ -457,20 +460,20 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
 
                 jObj = JObject.Parse(responsebody);
             }
 
-            if (null != jObj["error"])
+            if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj["error"].Value<string>();
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
                 _log.Add(TAG, LastError, LogItemType.Error);
             }
-            if (null != jObj["result"])
+            if (null != jObj[JsonStringConstants.RESULT])
             {
                 json = responsebody;
                 result = true;
@@ -590,7 +593,7 @@ namespace OasCommonLib.WebService
             {
                 string data = ActionParametersHelper.GenerateParameters("read_vin_info", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>("vin", vin)
+                    new KeyValuePair<string, object>(WebStringConstants.VIN, vin)
                 });
                 reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
@@ -601,7 +604,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -613,9 +616,9 @@ namespace OasCommonLib.WebService
             }
 
             JToken jObj = JObject.Parse(responsebody);
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
             }
 
@@ -684,7 +687,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -697,23 +700,23 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
 
                 jObj = JObject.Parse(responsebody);
             }
 
-            if (null != jObj["error"])
+            if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj["error"].Value<string>();
-                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                 return res;
             }
-            if (null != jObj["result"])
+            if (null != jObj[JsonStringConstants.RESULT])
             {
-                var result = jObj["result"].Value<string>();
+                var result = jObj[JsonStringConstants.RESULT].Value<string>();
 
                 if ("ok".Equals(result))
                 {
@@ -773,7 +776,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -786,23 +789,23 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
 
                 jObj = JObject.Parse(responsebody);
             }
 
-            if (null != jObj["error"])
+            if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj["error"].Value<string>();
-                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                 return res;
             }
-            if (null != jObj["result"])
+            if (null != jObj[JsonStringConstants.RESULT])
             {
-                var result = jObj["result"].Value<int>();
+                var result = jObj[JsonStringConstants.RESULT].Value<int>();
                 res = result > 0;
             }
 
@@ -853,7 +856,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -868,23 +871,23 @@ namespace OasCommonLib.WebService
             {
                 JObject jObj = JObject.Parse(responsebody);
 
-                if (null != jObj["_d"])
+                if (null != jObj[WebStringConstants.ENC_DATA])
                 {
-                    string encodedResponse = jObj["_d"].Value<string>();
+                    string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                     responsebody = CoderHelper.Decode(encodedResponse);
 
                     jObj = JObject.Parse(responsebody);
                 }
 
-                if (null != jObj["error"])
+                if (null != jObj[JsonStringConstants.ERROR])
                 {
-                    LastError = jObj["error"].Value<string>();
-                    _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                    _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                     return res;
                 }
-                if (null != jObj["result"])
+                if (null != jObj[JsonStringConstants.RESULT])
                 {
-                    var result = jObj["result"];
+                    var result = jObj[JsonStringConstants.RESULT];
 
                     VinInfo vi = new VinInfo();
                     vi.Vin = vin;
@@ -976,7 +979,7 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
+                downloadUrl = DataServiceUrl + WebStringConstants.ENC_DATA + CoderHelper.Encode(requestParameters);
             }
 
             try
@@ -996,15 +999,15 @@ namespace OasCommonLib.WebService
                     {
                         JObject jObj = JObject.Parse(text);
 
-                        if (null != jObj["_d"])
+                        if (null != jObj[WebStringConstants.ENC_DATA])
                         {
-                            string encodedResponse = jObj["_d"].Value<string>();
+                            string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                             text = CoderHelper.Decode(encodedResponse);
 
                             jObj = JObject.Parse(text);
                         }
 
-                        error = jObj["error"].Value<string>();
+                        error = jObj[JsonStringConstants.ERROR].Value<string>();
                     }
                     stage = 3;
                     if (null != error)
@@ -1059,7 +1062,7 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                downloadUrl = DataServiceUrl + "_d" + CoderHelper.Encode(requestParameters);
+                downloadUrl = DataServiceUrl + WebStringConstants.ENC_DATA + CoderHelper.Encode(requestParameters);
             }
 
             try
@@ -1074,17 +1077,17 @@ namespace OasCommonLib.WebService
                     string text = File.ReadAllText(caseAudioName);
                     JObject jObj = JObject.Parse(text);
 
-                    if (null != jObj["_d"])
+                    if (null != jObj[WebStringConstants.ENC_DATA])
                     {
-                        string encodedResponse = jObj["_d"].Value<string>();
+                        string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                         text = CoderHelper.Decode(encodedResponse);
 
                         jObj = JObject.Parse(text);
                     }
 
-                    if (null != jObj["error"])
+                    if (null != jObj[JsonStringConstants.ERROR])
                     {
-                        _log.Add(TAG, "server download failed : " + jObj["error"].Value<string>(), LogItemType.Error);
+                        _log.Add(TAG, "server download failed : " + jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                     }
                     else
                     {
@@ -1123,7 +1126,7 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool ReadAudioNotes(long envelopeId, out List<AudioNote> anList)
+        public static bool ReadAudioNotes(long envelopeId, out IList<CommonInfo> anList)
         {
             bool res = false;
             string responsebody = string.Empty;
@@ -1167,7 +1170,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -1181,25 +1184,25 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
 
                 jObj = JObject.Parse(responsebody);
             }
 
-            if (null != jObj["error"])
+            if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj["error"].Value<string>();
-                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                 return res;
             }
-            if (null != jObj["result"])
+            if (null != jObj[JsonStringConstants.RESULT])
             {
-                anList = new List<AudioNote>();
+                anList = new List<CommonInfo>();
 
-                var result = jObj["result"];
+                var result = jObj[JsonStringConstants.RESULT];
                 DateTime updated;
 
                 foreach (var d in result["audio_notes"])
@@ -1279,7 +1282,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -1293,23 +1296,23 @@ namespace OasCommonLib.WebService
 
             JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj["_d"])
+            if (null != jObj[WebStringConstants.ENC_DATA])
             {
-                string encodedResponse = jObj["_d"].Value<string>();
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
                 responsebody = CoderHelper.Decode(encodedResponse);
 
                 jObj = JObject.Parse(responsebody);
             }
 
-            if (null != jObj["error"])
+            if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj["error"].Value<string>();
-                _log.Add(TAG, jObj["error"].Value<string>(), LogItemType.Error);
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                 return res;
             }
-            if (null != jObj["result"])
+            if (null != jObj[JsonStringConstants.RESULT])
             {
-                var result = jObj["result"];
+                var result = jObj[JsonStringConstants.RESULT];
 
                 deletedAudioNoteId = result["id"].Value<int>();
                 _log.Add(
@@ -1358,7 +1361,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
             }
@@ -1379,16 +1382,16 @@ namespace OasCommonLib.WebService
             {
                 JObject jObj = JObject.Parse(responsebody);
 
-                if (null != jObj["error"])
+                if (null != jObj[JsonStringConstants.ERROR])
                 {
-                    LastError = jObj["error"].Value<string>();
+                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
                     _log.Add(TAG, LastError, LogItemType.Error);
                     return false;
                 }
 
-                if (null != jObj["result"])
+                if (null != jObj[JsonStringConstants.RESULT])
                 {
-                    var result = jObj["result"];
+                    var result = jObj[JsonStringConstants.RESULT];
 
                     var codes = result["Codes"];
                     if (null != codes)
@@ -1491,7 +1494,7 @@ namespace OasCommonLib.WebService
             {
                 using (WebClientEx client = new WebClientEx(cookies))
                 {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, "POST", reqparm);
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
                     responsebody = Encoding.UTF8.GetString(responsebytes);
                 }
 
