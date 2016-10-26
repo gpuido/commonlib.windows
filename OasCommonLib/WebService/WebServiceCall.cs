@@ -1217,10 +1217,9 @@ namespace OasCommonLib.WebService
                         updated = DateTime.UtcNow;
                     }
 
-                    anList.Add(new AudioNote()
+                    anList.Add(new CommonInfo()
                     {
-                        EnvelopeId = envelopeId,
-                        Id = d["id"].Value<long>(),
+                        Id = d[JsonStringConstants.ID].Value<long>(),
                         FileName = d["file_name"].Value<string>(),
                         Updated = updated,
                         TZ = d["tz"].Value<string>(),
@@ -1314,7 +1313,7 @@ namespace OasCommonLib.WebService
             {
                 var result = jObj[JsonStringConstants.RESULT];
 
-                deletedAudioNoteId = result["id"].Value<int>();
+                deletedAudioNoteId = result[JsonStringConstants.ID].Value<int>();
                 _log.Add(
                    TAG,
                    "deleted audio_note_id : " + deletedAudioNoteId);
@@ -1400,7 +1399,7 @@ namespace OasCommonLib.WebService
                         {
                             cfgOperCodes.Add(new OperationCode()
                             {
-                                Id = c["id"].Value<long>(),
+                                Id = c[JsonStringConstants.ID].Value<long>(),
                                 CompanyId = c["company_id"].Value<long>(),
                                 Code = c["code"].Value<string>(),
                                 Abbr = c["abbr"].Value<string>(),
@@ -1416,7 +1415,7 @@ namespace OasCommonLib.WebService
                         {
                             cfgAddActivities.Add(new AdditionalActivity()
                             {
-                                Id = c["id"].Value<long>(),
+                                Id = c[JsonStringConstants.ID].Value<long>(),
                                 CompanyId = c["company_id"].Value<long>(),
                                 Code = c["code"].Value<string>(),
                                 Description = c["description"].Value<string>()

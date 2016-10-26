@@ -53,7 +53,6 @@
     <Compile Include="Config\OasConfig.cs" />
     <Compile Include="Constants\JsonStringConstants.cs" />
     <Compile Include="Constants\WebStringConstants.cs" />
-    <Compile Include="Data\AudioNote.cs" />
     <Compile Include="Data\CommonInfo.cs" />
     <Compile Include="Data\CommonUploadInfo.cs" />
     <Compile Include="Data\Config\AdditionalActivity.cs" />
