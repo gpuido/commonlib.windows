@@ -135,6 +135,159 @@ namespace OasCommonLib.WebService
             return result;
         }
 
+        public static bool UploadFileInfo(long envelopeId, long index, string pathToFile, InfoTypeEnum infoType, CommonInfo ci, out long uploadedId)
+        {
+            bool res = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+            int uploadedSize = 0;
+            string fileName = Path.GetFileName(pathToFile);
+
+            Debug.Assert(envelopeId > 0);
+
+            LastError = string.Empty;
+            uploadedId = 0L;
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   string.Format("no session info found in 'upload_file_info'"),
+                   LogItemType.Error);
+
+                return res;
+            }
+
+            if (!File.Exists(pathToFile) || FileHelper.Length(pathToFile) < FileHelper.MinimalLength)
+            {
+                LastError = string.Format("file '{0}' doesn't exist", pathToFile);
+                return res;
+            }
+
+            var nvc = new NameValueCollection();
+            nvc.Add(WebStringConstants.ACTION, "upload_file_info");
+            nvc.Add(WebStringConstants.CLIENT, ClientInfo);
+            nvc.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
+            nvc.Add("index", index.ToString());
+            nvc.Add("info_type", ((int)infoType).ToString());
+            nvc.Add("ci", ci.ToJson());
+            nvc.Add("filename", fileName);
+
+            string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
+            request.ContentType = "multipart/form-data; boundary=" + boundary;
+            request.Method = WebStringConstants.POST;
+            request.KeepAlive = true;
+            request.Credentials = CredentialCache.DefaultCredentials;
+
+            if (request.CookieContainer == null)
+            {
+                request.CookieContainer = new CookieContainer();
+            }
+
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
+            request.CookieContainer.Add(cc);
+
+            using (Stream rs = request.GetRequestStream())
+            {
+                string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
+                foreach (string key in nvc.Keys)
+                {
+                    rs.Write(boundarybytes, 0, boundarybytes.Length);
+                    string formitem = string.Format(formdataTemplate, key, nvc[key]);
+                    byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
+                    rs.Write(formitembytes, 0, formitembytes.Length);
+                }
+                rs.Write(boundarybytes, 0, boundarybytes.Length);
+
+                string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                string header = string.Format(headerTemplate, "file", fileName, "application/octet-stream");
+                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
+                rs.Write(headerbytes, 0, headerbytes.Length);
+                using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
+                {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead = 0;
+                    while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
+                    {
+                        rs.Write(buffer, 0, bytesRead);
+                    }
+                    fileStream.Close();
+                }
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                rs.Write(trailer, 0, trailer.Length);
+                rs.Close();
+            }
+
+            try
+            {
+                using (WebResponse wresp = request.GetResponse())
+                {
+                    using (Stream stream2 = wresp.GetResponseStream())
+                    {
+                        using (StreamReader reader2 = new StreamReader(stream2))
+                        {
+                            responsebody = reader2.ReadToEnd();
+                            reader2.Close();
+                        }
+                        stream2.Close();
+                    }
+                    wresp.Close();
+                }
+
+                JObject jObj = JObject.Parse(responsebody);
+
+                if (null != jObj[JsonStringConstants.ERROR])
+                {
+                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                    _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                    return res;
+                }
+                if (null != jObj[JsonStringConstants.RESULT])
+                {
+                    var result = jObj[JsonStringConstants.RESULT];
+
+                    uploadedSize = result["received_size"].Value<int>();
+                    if (uploadedSize == FileHelper.Length(pathToFile))
+                    {
+                        var uId = result["uploaded_id"];
+                        if (null != uId)
+                        {
+                            uploadedId = uId.Value<long>();
+                        }
+
+                        res = true;
+                    }
+                    else
+                    {
+                        LastError = "Wrong size of uploaded files " + pathToFile;
+                        _log.Add(
+                            TAG,
+                            "Wrong size of uploaded files " + pathToFile,
+                            LogItemType.Warning);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!ex.Message.Contains("timed out"))
+                {
+                    Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                }
+                LastError = ex.Message;
+                _log.AddError(TAG, ex, "upload_file_info failed");
+            }
+
+            return res;
+
+        }
+
         #region images
         public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, string tz, string proof, out long uploadedId)
         {
@@ -337,7 +490,7 @@ namespace OasCommonLib.WebService
                 {
                     new KeyValuePair<string, object>(WebStringConstants.LOGIN, login),
                     new KeyValuePair<string, object>(WebStringConstants.PASSWD, passwd)
-                }); 
+                });
                 reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
 
@@ -910,21 +1063,18 @@ namespace OasCommonLib.WebService
         #endregion
 
         #region download data files
-        public static bool DownloadPrecondition(long envelopeId, int precNumber, string pathToImage)
+        public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
         {
-            Debug.Assert(envelopeId > 0);
             return DownloadInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
         }
 
         public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage)
         {
-            Debug.Assert(envelopeId > 0);
             return DownloadInfoImage(envelopeId, dbReference, pathToImage, InfoTypeEnum.AiDetail);
         }
 
         public static bool DownloadSupplementInfoImage(long envelopeId, string pathToImage)
         {
-            Debug.Assert(envelopeId > 0);
             return DownloadInfoImage(envelopeId, -1L, pathToImage, InfoTypeEnum.Supplement);
         }
 
