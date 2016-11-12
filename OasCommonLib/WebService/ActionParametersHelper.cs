@@ -19,7 +19,7 @@
                 throw new ArgumentException("action name can not be empty");
             }
 
-            paramString.AppendFormat("{0}={01", WebStringConstants.ACTION, actionName);
+            paramString.AppendFormat("{0}={1}", WebStringConstants.ACTION, actionName);
 
             if (!string.IsNullOrEmpty(clientInfo))
             {

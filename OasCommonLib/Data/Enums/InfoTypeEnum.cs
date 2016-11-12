@@ -1,9 +1,9 @@
 ﻿namespace OasCommonLib.Data
 {
-    public enum InfoTypeEnum
+    public enum InfoTypeEnum : int
     {
         Precondition = 0,
-        AiDetail = 1,
+        DetailAddInfo = 1,
         Supplement = 2,
         AudioNote = 3
     }

@@ -106,6 +106,11 @@
                 {
                     ci.FileName = ai["FileName"].Value<string>();
                 }
+
+                if (null != ai["is_file_missing"])
+                {
+                    ci.FileMissing = ai["is_file_missing"].Value<bool>();
+                }
             }
             catch (Exception ex)
             {

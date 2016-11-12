@@ -14,9 +14,11 @@
         public static readonly string TZ = "tz";
         public static readonly string PROOF = "proof";
         public static readonly string ENVELOPE_ID = "envelope_id";
+        public static readonly string REFERENCE = "reference";
         public static readonly string DB_REFERENCE = "db_reference";
         public static readonly string IS_FILE_MISSING = "is_file_missing";
         public static readonly string MCF = "mcf";
         public static readonly string PREC_NUM = "prec_num";
+        public static readonly string ADD_INFO = "add_info";
     }
 }

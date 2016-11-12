@@ -8,5 +8,6 @@
     {
         public ServerTypeEnum ServerType { get; set; }
         public string ServerVersion { get; set; }
+        public string DbVersion { get; set; }
     }
 }

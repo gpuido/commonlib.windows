@@ -4,6 +4,8 @@
     {
         public static readonly string ENVELOPE_ID = "envelope_id";
         public static readonly string DB_REFERENCE = "db_reference";
+        public static readonly string REFERENCE = "reference";
+        public static readonly string INFO_TYPE = "info_type";
         public static readonly string ID = "id";
         public static readonly string FILE_NAME = "file_name";
         public static readonly string PREC_NUMBER = "prec_number";

@@ -53,6 +53,7 @@
     <Compile Include="Config\OasConfig.cs" />
     <Compile Include="Constants\JsonStringConstants.cs" />
     <Compile Include="Constants\WebStringConstants.cs" />
+    <Compile Include="Data\CommonAdditionalInfo.cs" />
     <Compile Include="Data\CommonInfo.cs" />
     <Compile Include="Data\CommonUploadInfo.cs" />
     <Compile Include="Data\Config\AdditionalActivity.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Helpers\OlsonTimeZoneHelper.cs" />
     <Compile Include="Helpers\OSInfo.cs" />
     <Compile Include="Helpers\UtcHelper.cs" />
+    <Compile Include="Helpers\VersionCheckerHelper.cs" />
     <Compile Include="Helpers\ZipHelper.cs" />
     <Compile Include="Interfaces\IError.cs" />
     <Compile Include="Logger\Log.cs" />

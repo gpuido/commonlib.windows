@@ -119,6 +119,7 @@
         {
             timer.Elapsed -= timer_Elapsed;
             timer.Enabled = false;
+            timer.Dispose();
 
             FlushLog();
             Debug.WriteLine("Log was disposed");
@@ -271,7 +272,7 @@
                 _cfg.StartWebServer ?
                     string.Format(
                         "url:{0}, port:{1}",
-                        string.Join(",", _cfg.Ips.ToArray()),
+                        String.Join(",", _cfg.Ips.ToArray()),
                         _cfg.WebServerPort
                     ) : "no"
                 );

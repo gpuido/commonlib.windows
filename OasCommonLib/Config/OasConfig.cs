@@ -12,7 +12,7 @@ namespace OasCommonLib.Config
     using System.IO;
     using System.Linq;
 
-    public class CaseConfigData : IConfigData
+    public sealed class CaseConfigData : IConfigData
     {
         // place where check for EMS files
         public string[] EMSCasePath;
@@ -149,7 +149,7 @@ namespace OasCommonLib.Config
         }
     }
 
-    public class WebServiceData : IConfigData
+    public sealed class WebServiceData : IConfigData
     {
         // web service url
         public string Url;
@@ -182,7 +182,7 @@ namespace OasCommonLib.Config
         }
     }
 
-    public class WebServerData : IConfigData
+    public sealed class WebServerData : IConfigData
     {
         public bool RunServer;
         public int Port;
@@ -233,11 +233,31 @@ namespace OasCommonLib.Config
         }
     }
 
+    public sealed class UIData : IConfigData
+    {
+        public int UITimeInMinutes;
+
+        public void ExtractData(JToken data)
+        {
+            JToken jt = data["UITimeInMinutes"];
+            if (null != jt)
+            {
+                UITimeInMinutes = jt.Value<int>();
+            }
+        }
+
+        public void InitDefault(string dataPath)
+        {
+            UITimeInMinutes = 120; // 2 hours by default
+        }
+    }
+
     public class OasConfigData
     {
         public readonly CaseConfigData CaseConfig;
         public readonly WebServiceData WebConfig;
         public readonly WebServerData WebServer;
+        public readonly UIData UiConfig;
         public string LogPath { get; set; }
 
         // place to store additional data
@@ -301,6 +321,7 @@ namespace OasCommonLib.Config
             CaseConfig = new CaseConfigData();
             WebConfig = new WebServiceData();
             WebServer = new WebServerData();
+            UiConfig = new UIData();
 
             CurrentVersion = currentVersion;
 
@@ -465,6 +486,15 @@ namespace OasCommonLib.Config
 #endif
             }
 
+            if (0 == Data.UiConfig.UITimeInMinutes)
+            {
+#if DEBUG
+                Data.UiConfig.UITimeInMinutes = 120; //secs
+#else
+                    Data.ServerPollTimeout = 60 * 5; //secs
+#endif
+            }
+
             if (0 == Data.HowManyDaysToShow)
             {
 #if DEBUG
@@ -528,6 +558,12 @@ namespace OasCommonLib.Config
             if (null != webServer)
             {
                 ocd.WebServer.ExtractData(webServer);
+            }
+
+            JToken UiData = o["UiConfig"];
+            if (null != UiData)
+            {
+                ocd.UiConfig.ExtractData(UiData);
             }
 
             JToken jt = o["LogPath"];
@@ -681,6 +717,8 @@ namespace OasCommonLib.Config
             Data.ShowNotification = false;
             Data.CloseToTray = true;
             Data.SortHeader = 7;
+
+            Data.UiConfig.UITimeInMinutes = 120;
 
 #if DEBUG
             Data.HowManyDaysToShow = OasConfigType == OasConfigType.evcp ? 1 : 100;
@@ -1157,6 +1195,22 @@ namespace OasCommonLib.Config
             }
         }
 
+        public int UITimeInMinutes
+        {
+            get
+            {
+                return Data.UiConfig.UITimeInMinutes;
+            }
+            set
+            {
+                if (Data.UiConfig.UITimeInMinutes != value)
+                {
+                    IsChanged = true;
+                }
+                Data.UiConfig.UITimeInMinutes = value;
+            }
+        }
+
         public string ImageExportPath
         {
             get
@@ -1181,7 +1235,7 @@ namespace OasCommonLib.Config
             }
             set
             {
-                if (!string.Join("", Data.StandardDescription).Equals(string.Join("", value)))
+                if (!String.Join("", Data.StandardDescription).Equals(String.Join("", value)))
                 {
                     Data.StandardDescription = value;
                 }

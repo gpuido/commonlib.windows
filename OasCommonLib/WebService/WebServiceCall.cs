@@ -121,7 +121,12 @@ namespace OasCommonLib.WebService
                                 }
                             }
                         }
-                        result = true;
+
+                        if (null != jObj["db"])
+                        {
+                            serverInfo.DbVersion = jObj["db"].Value<string>();
+                        }
+                            result = true;
                     }
                 }
             }
@@ -135,7 +140,7 @@ namespace OasCommonLib.WebService
             return result;
         }
 
-        public static bool UploadFileInfo(long envelopeId, long index, string pathToFile, InfoTypeEnum infoType, CommonInfo ci, out long uploadedId)
+        public static bool UploadFileInfo(long envelopeId, long reference, string pathToFile, InfoTypeEnum infoType, CommonInfo ci, out long uploadedId)
         {
             bool res = false;
             string responsebody = string.Empty;
@@ -172,7 +177,7 @@ namespace OasCommonLib.WebService
             nvc.Add(WebStringConstants.ACTION, "upload_file_info");
             nvc.Add(WebStringConstants.CLIENT, ClientInfo);
             nvc.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
-            nvc.Add("index", index.ToString());
+            nvc.Add("reference", reference.ToString());
             nvc.Add("info_type", ((int)infoType).ToString());
             nvc.Add("ci", ci.ToJson());
             nvc.Add("filename", fileName);
@@ -307,7 +312,7 @@ namespace OasCommonLib.WebService
 
             switch (infoType)
             {
-                case InfoTypeEnum.AiDetail:
+                case InfoTypeEnum.DetailAddInfo:
                     uploadType = "upload_image";
                     break;
                 case InfoTypeEnum.Precondition:
@@ -1063,6 +1068,15 @@ namespace OasCommonLib.WebService
         #endregion
 
         #region download data files
+        public static bool DownloadAdditionalInfo(CommonAdditionalInfo cai, string pathToImage)
+        {
+            if (File.Exists(pathToImage) && FileHelper.Length(pathToImage) > FileHelper.MinimalLength)
+            {
+                return true;
+            }
+            return DownloadInfoImage(cai.EnvelopeId, cai.Reference, pathToImage, cai.InfoType);
+        }
+
         public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
         {
             return DownloadInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
@@ -1070,7 +1084,7 @@ namespace OasCommonLib.WebService
 
         public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage)
         {
-            return DownloadInfoImage(envelopeId, dbReference, pathToImage, InfoTypeEnum.AiDetail);
+            return DownloadInfoImage(envelopeId, dbReference, pathToImage, InfoTypeEnum.DetailAddInfo);
         }
 
         public static bool DownloadSupplementInfoImage(long envelopeId, string pathToImage)
@@ -1091,7 +1105,7 @@ namespace OasCommonLib.WebService
 
             switch (infoType)
             {
-                case InfoTypeEnum.AiDetail:
+                case InfoTypeEnum.DetailAddInfo:
                     downloadAction = "dl";
                     break;
                 case InfoTypeEnum.Precondition:
@@ -1355,7 +1369,7 @@ namespace OasCommonLib.WebService
                 var result = jObj[JsonStringConstants.RESULT];
                 DateTime updated;
 
-                foreach (var d in result["audio_notes"])
+                foreach (var d in result["data"])
                 {
                     try
                     {
@@ -1383,14 +1397,14 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool DeleteAudioNote(long envelopeId, long audioNoteId, string audioFile)
+        public static bool RemoveCommonAdditionalInfo(CommonAdditionalInfo cai)
         {
             bool res = false;
             string responsebody = string.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
-            int deletedAudioNoteId = 0;
+            int deletedId = 0;
 
             LastError = string.Empty;
 
@@ -1400,7 +1414,7 @@ namespace OasCommonLib.WebService
                 LastError = "no session info found";
                 _log.Add(
                    TAG,
-                   string.Format("no session info found in 'clear_audioinfo'"),
+                   string.Format("no session info found in 'del_common_add_info'"),
                    LogItemType.Error);
 
                 return res;
@@ -1408,19 +1422,22 @@ namespace OasCommonLib.WebService
 
             if (!_cfg.EncodeTraffic)
             {
-                reqparm.Add(WebStringConstants.ACTION, "clear_audioinfo");
+                reqparm.Add(WebStringConstants.ACTION, "del_common_add_info");
                 reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
-                reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
-                reqparm.Add(WebStringConstants.ID, audioNoteId.ToString());
-                reqparm.Add("audio_note", audioFile);
+                reqparm.Add(WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString());
+                reqparm.Add(WebStringConstants.REFERENCE, cai.Reference.ToString());
+                reqparm.Add(WebStringConstants.INFO_TYPE, ((int)cai.InfoType).ToString());
+                reqparm.Add(WebStringConstants.ADD_INFO, ((CommonInfo)cai).ToJson());
             }
             else
             {
-                string data = ActionParametersHelper.GenerateParameters("clear_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
+                string data = ActionParametersHelper.GenerateParameters("del_common_add_info", ClientInfo, new List<KeyValuePair<string, object>>()
                 {
-                    new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, envelopeId),
-                    new KeyValuePair<string, object>(WebStringConstants.ID, audioNoteId),
-                    new KeyValuePair<string, object>("audio_note", audioFile)
+                    new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, cai.EnvelopeId),
+                    new KeyValuePair<string, object>(WebStringConstants.REFERENCE, cai.Reference),
+                    new KeyValuePair<string, object>(WebStringConstants.REFERENCE, cai.Reference),
+                    new KeyValuePair<string, object>(WebStringConstants.INFO_TYPE, (int)cai.InfoType),
+                    new KeyValuePair<string, object>(WebStringConstants.ADD_INFO, ((CommonInfo)cai).ToJson())
                 });
                 reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
             }
@@ -1463,18 +1480,120 @@ namespace OasCommonLib.WebService
             {
                 var result = jObj[JsonStringConstants.RESULT];
 
-                deletedAudioNoteId = result[JsonStringConstants.ID].Value<int>();
+                deletedId = result["deleted"].Value<int>();
                 _log.Add(
                    TAG,
-                   "deleted audio_note_id : " + deletedAudioNoteId);
+                   "deleted id : " + deletedId);
 
                 res = true;
             }
 
             return res;
         }
-
         #endregion
+
+        public static bool ReadMissingFiles(long envelopeId, out List<CommonUploadInfo> missingInfoList)
+        {
+            bool res = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+
+            LastError = string.Empty;
+            missingInfoList = new List<CommonUploadInfo>();
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found";
+                _log.Add(
+                   TAG,
+                   "no session info found in 'latest_addinfo'",
+                   LogItemType.Error);
+
+                return false;
+            }
+
+            reqparm.Add(WebStringConstants.ACTION, "read_missing_files");
+            reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
+            reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+            cookies.Add(cc);
+            try
+            {
+                using (WebClientEx client = new WebClientEx(cookies))
+                {
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
+                    responsebody = Encoding.UTF8.GetString(responsebytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = "check missing images. error : " + ex.Message;
+                _log.AddError(TAG, ex, LastError);
+
+                responsebody = WebServiceCall.ErrorResponse(ex);
+            }
+
+            try
+            {
+                JObject jObj = JObject.Parse(responsebody);
+
+                if (null != jObj[JsonStringConstants.ERROR])
+                {
+                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                    _log.Add(TAG, LastError, LogItemType.Error);
+                    return false;
+                }
+                if (null != jObj[JsonStringConstants.RESULT])
+                {
+                    var result = jObj[JsonStringConstants.RESULT];
+                    var addInfo = result["add_info"];
+
+                    foreach (var ai in addInfo)
+                    {
+                        var reference = ai["reference"].Value<long>();
+                        var missing = ai[JsonStringConstants.IS_FILE_MISSING].Value<bool>();
+                        if (missing)
+                        {
+                            var fileName = ai[JsonStringConstants.FILE_NAME].Value<string>();
+                            long id = ai[JsonStringConstants.ID].Value<long>();
+                            InfoTypeEnum type = (InfoTypeEnum)ai["type"].Value<int>();
+                            string msg = string.Format("going to upload detail image db_ref:{0}, image:{1}, id :{2}", reference, fileName, id);
+
+                            var ci = new CommonUploadInfo()
+                            {
+                                FileMissing = true,
+                                FileName = fileName,
+                                Id = id,
+                                Reference = reference,
+                                InfoType = type
+                            };
+                            missingInfoList.Add(ci);
+                        }
+                    }
+
+                    res = true;
+                }
+            }
+            catch (JsonReaderException jre)
+            {
+                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
+                LastError = "get latest info failed. error : " + jre.Message;
+                _log.AddError(TAG, jre, LastError + Environment.NewLine + responsebody);
+            }
+            catch (Exception ex)
+            {
+                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = "get latest info failed. error : " + ex.Message;
+                _log.AddError(TAG, ex, LastError);
+            }
+
+            return res;
+        }
 
         public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds)
         {
@@ -1609,7 +1728,7 @@ namespace OasCommonLib.WebService
         }
 
 
-        public static bool SendErrorReport(Exception ex)
+        public static bool SendErrorReport(Exception ex, string appName)
         {
             bool result = false;
             string responsebody = string.Empty;
@@ -1631,6 +1750,7 @@ namespace OasCommonLib.WebService
                 return result;
             }
 
+            reqparm.Add("APP_NAME", appName);
             reqparm.Add("PHONE_MODEL", "DC");
             reqparm.Add("APP_VERSION_NAME", ClientInfo);
             reqparm.Add("ANDROID_VERSION", OSInfo.GetFullInfo());
