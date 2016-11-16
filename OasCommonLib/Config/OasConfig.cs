@@ -237,6 +237,11 @@ namespace OasCommonLib.Config
     {
         public int UITimeInMinutes;
 
+        public UIData()
+        {
+            UITimeInMinutes = 120;
+        }
+
         public void ExtractData(JToken data)
         {
             JToken jt = data["UITimeInMinutes"];

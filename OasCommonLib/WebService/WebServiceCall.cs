@@ -1435,7 +1435,6 @@ namespace OasCommonLib.WebService
                 {
                     new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, cai.EnvelopeId),
                     new KeyValuePair<string, object>(WebStringConstants.REFERENCE, cai.Reference),
-                    new KeyValuePair<string, object>(WebStringConstants.REFERENCE, cai.Reference),
                     new KeyValuePair<string, object>(WebStringConstants.INFO_TYPE, (int)cai.InfoType),
                     new KeyValuePair<string, object>(WebStringConstants.ADD_INFO, ((CommonInfo)cai).ToJson())
                 });
@@ -1595,7 +1594,7 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds)
+        public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds, out List<AddInfoTypeInfo> aitList)
         {
             bool res = false;
             string responsebody = string.Empty;
@@ -1606,6 +1605,7 @@ namespace OasCommonLib.WebService
             cfgAddActivities = new List<AdditionalActivity>();
             cfgOperCodes = new List<OperationCode>();
             cfgPreconds = new List<PreconditionInfo>();
+            aitList = new List<AddInfoTypeInfo>();
             LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -1705,6 +1705,15 @@ namespace OasCommonLib.WebService
                                 Description = c["description"].Value<string>(),
                                 PicturesToTake = c["pictures_to_take"].Value<int>()
                             });
+                        }
+                    }
+
+                    var aiTypes = result["AddInfoTypes"];
+                    if (null != aiTypes)
+                    {
+                        foreach (var ait in aiTypes)
+                        {
+                            aitList.Add(AddInfoTypeInfo.Parse(ait));
                         }
                     }
                 }

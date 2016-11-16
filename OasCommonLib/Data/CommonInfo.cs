@@ -47,7 +47,7 @@
 
             if (!FileHelper.Copy(src, dst, true) || !FileHelper.DeleteFile(src))
             {
-                LastError = string.Format("error: during move file '{0}' to '{1}' - {2}", src, dst, FileHelper.Error);
+                LastError = String.Format("error: during move file '{0}' to '{1}' - {2}", src, dst, FileHelper.Error);
                 return false;
             }
 
