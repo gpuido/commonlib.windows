@@ -1,12 +1,13 @@
 ﻿namespace OasCommonLib.Helpers
 {
-    using Logger;
     using System;
     using System.Text;
 
     public static class CredentialsHelper
     {
         static readonly Random _random = new Random();
+
+        public static string LastError { get; private set; }
 
         public static bool ReadCredentials(string credentialInfo, out string login, out string passwd)
         {
@@ -15,8 +16,10 @@
             login = string.Empty;
             passwd = string.Empty;
 
+            LastError = String.Empty;
             if (string.IsNullOrEmpty(credentialInfo))
             {
+                LastError = "credential string is empty";
                 return false;
             }
 
@@ -87,8 +90,9 @@
             }
             catch (Exception ex)
             {
-                LogQueue.Instance.AddError("CredentialHelper", ex);
+                LastError = "error during savesing credentions :" + ex.Message;
             }
+
             return ok;
         }
     }
