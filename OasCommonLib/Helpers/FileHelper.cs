@@ -16,10 +16,7 @@
         public static readonly string TAG = "FileHelper";
         public static readonly long MinimalLength = 500L;
 
-        public static readonly OasConfig _cfg = OasConfig.Instance;
-        public static readonly LogQueue _log = LogQueue.Instance;
-
-        public static string Error { get; private set; }
+        public static string LastError { get; private set; }
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern bool CopyFileEx(string lpExistingFileName, string lpNewFileName, CopyProgressRoutine lpProgressRoutine, int lpData, ref int pbCancel, uint dwCopyFlags);
@@ -80,7 +77,7 @@
         {
             bool result = false;
 
-            Error = string.Empty;
+            LastError = string.Empty;
 
             try
             {
@@ -93,7 +90,7 @@
                     {
                         if (!replace)
                         {
-                            Error = string.Format("file '{0}' already exists", to);
+                            LastError = string.Format("file '{0}' already exists", to);
                             return result;
                         }
                         else
@@ -114,13 +111,7 @@
             }
             catch (Exception ex)
             {
-                Error = string.Format("file copy failed : {0}", ex.Message);
-                _log.AddError(
-                    TAG,
-                    ex,
-                    string.Format("error during file copy from '{0}' to '{1}'", from, to));
-
-                result = false;
+                LastError = string.Format("file copy failed : {0}", ex.Message);
             }
 
             return result;
@@ -188,7 +179,7 @@
         {
             bool result = false;
 
-            Error = string.Empty;
+            LastError = string.Empty;
 
             try
             {
@@ -202,7 +193,7 @@
                     {
                         if (!replace)
                         {
-                            Error = string.Format("file '{0}' already exists", to);
+                            LastError = string.Format("file '{0}' already exists", to);
                             return result;
                         }
                         else
@@ -222,12 +213,7 @@
             }
             catch (Exception ex)
             {
-                Error = string.Format("file move failed : {0}", ex.Message);
-                _log.AddError(
-                    TAG,
-                    ex,
-                    string.Format("error during file move from '{0}' to '{1}'", from, to));
-
+                LastError = string.Format("file move failed : {0}", ex.Message);
                 result = false;
             }
 
@@ -263,7 +249,7 @@
             }
             catch (Exception ex)
             {
-                Error = string.Format("error during creating apth '{0}' {1}", path, ex.Message);
+                LastError = string.Format("error during creating apth '{0}' {1}", path, ex.Message);
             }
 
             return res;
@@ -286,15 +272,16 @@
             }
             catch (Exception ex)
             {
-                _log.AddError(TAG, ex);
+                LastError = String.Format("error during file '{0}' deletion", ex.Message);
                 return false;
             }
 
             return true;
         }
 
-        public static void MoveEmsToBackup(string emsFullPath)
+        public static bool MoveEmsToBackup(string emsFullPath)
         {
+            bool res = false;
             string srcPath;
             string name;
             string trgPath;
@@ -316,15 +303,20 @@
                     }
                     File.Move(f, Path.Combine(trgPath, Path.GetFileName(f)));
                 }
+
+                res = true;
             }
             catch (Exception ex)
             {
-                _log.AddError(TAG, ex);
+                LastError = String.Format("error during moving file '{0}' to backup", ex.Message);
             }
+
+            return res;
         }
 
-        public static void MoveMcfToBackup(string mcfFullPath)
+        public static bool MoveMcfToBackup(string mcfFullPath)
         {
+            bool res = false;
             string srcPath;
             string name;
             string trgPath;
@@ -342,11 +334,15 @@
                     File.Delete(Path.Combine(trgPath, name));
                 }
                 Move(mcfFullPath, Path.Combine(trgPath, name), true);
+
+                res = true;
             }
             catch (Exception ex)
             {
-                _log.AddError(TAG, ex);
+                LastError = String.Format("error during moving mcf '{0}' to backup", ex.Message);
             }
+
+            return res;
         }
     }
 }

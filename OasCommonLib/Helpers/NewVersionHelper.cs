@@ -185,7 +185,7 @@
                     _log.Add(TAG, stepComment = string.Format("going to create '{0}'", _downloadPath), LogItemType.Info);
                     if (!FileHelper.CreateDirectoryRecursively(_downloadPath))
                     {
-                        Error = string.Format("cannot create temporary directory '{0}' : {1}", _downloadPath, FileHelper.Error);
+                        Error = string.Format("cannot create temporary directory '{0}' : {1}", _downloadPath, FileHelper.LastError);
                         return res;
                     }
 
@@ -240,7 +240,7 @@
                 step = 2;
                 if (!FileHelper.CreateDirectoryRecursively(destination))
                 {
-                    Error = string.Format("cannot create tempotrary directory '{0}': {1}", destination, FileHelper.Error);
+                    Error = string.Format("cannot create tempotrary directory '{0}': {1}", destination, FileHelper.LastError);
                     return res;
                 }
 

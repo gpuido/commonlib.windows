@@ -148,7 +148,7 @@
                     }
                     else
                     {
-                        _log.Add(TAG, FileHelper.Error);
+                        _log.Add(TAG, FileHelper.LastError);
                     }
                 }
             }
