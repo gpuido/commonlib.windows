@@ -6,7 +6,7 @@
 
     public class ZipHelper
     {
-        public static void CopyTo(Stream src, Stream dest)
+        private static void CopyTo(Stream src, Stream dest)
         {
             byte[] bytes = new byte[4096];
 
@@ -23,30 +23,32 @@
             var bytes = Encoding.UTF8.GetBytes(str);
 
             using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream())
             {
-                using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                using (var mso = new MemoryStream())
                 {
-                    //msi.CopyTo(gs);
-                    CopyTo(msi, gs);
-                }
+                    using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                    {
+                        CopyTo(msi, gs);
+                    }
 
-                return mso.ToArray();
+                    return mso.ToArray();
+                }
             }
         }
 
         public static string Unzip(byte[] bytes)
         {
             using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream())
             {
-                using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+                using (var mso = new MemoryStream())
                 {
-                    //gs.CopyTo(mso);
-                    CopyTo(gs, mso);
-                }
+                    using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+                    {
+                        CopyTo(gs, mso);
+                    }
 
-                return Encoding.UTF8.GetString(mso.ToArray());
+                    return Encoding.UTF8.GetString(mso.ToArray());
+                }
             }
         }
     }
