@@ -74,7 +74,7 @@
         {
             string zipFilePath = Path.Combine(logFolder, String.Format("{0}.log.zip", yearMonth));
 
-            using (ZipFile z = ZipFile.Create(zipFilePath))
+            using (ZipFile z = File.Exists(zipFilePath) ? new ZipFile(zipFilePath) : ZipFile.Create(zipFilePath))
             {
                 z.BeginUpdate();
 

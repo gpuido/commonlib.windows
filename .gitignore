@@ -245,3 +245,4 @@ ModelManifest.xml
 .fake/
 /PackLogFilesHelper/logs/2016-10.log.zip
 /PackLogFilesHelper/logs/2011-01.log.zip
+/PackLogFilesHelper/logs
