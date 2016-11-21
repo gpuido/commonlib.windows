@@ -16,23 +16,25 @@ namespace PackLogFilesHelper
         }
 
         [TestMethod]
-        public void IsNotCurrentMonth_Test()
+        public void howManyDaysSaveInArchive_Test()
         {
             YearMonthInfo dt;
 
-            var res = PackLogsHelper.IsCurrentMonth("2012-01-01.log", out dt);
-            Assert.IsFalse(res);
-            Assert.AreEqual(dt, new YearMonthInfo(2012, 01));
+            var res = PackLogsHelper.HowManyDaysFromNow("2012-01-01.log", out dt);
+            Assert.IsTrue(res > 100);
+            Assert.AreEqual(dt.Year, 2012);
+            Assert.AreEqual(dt.Month, 1);
 
-            res = PackLogsHelper.IsCurrentMonth(DateTime.Now.ToString(FormatHelper.DateFormat) + ".log", out dt);
-            Assert.IsTrue(res);
-            Assert.AreEqual(dt, new YearMonthInfo(DateTime.Now.Year, DateTime.Now.Month));
+            res = PackLogsHelper.HowManyDaysFromNow(DateTime.Now.ToString(FormatHelper.DateFormat) + ".log", out dt);
+            Assert.IsTrue(res == 0);
+            Assert.AreEqual(dt.Year, DateTime.Now.Year);
+            Assert.AreEqual(dt.Month, DateTime.Now.Month);
         }
 
         [TestMethod]
         public void PackLogFIles_Test()
         {
-            var res = PackLogsHelper.Pack("..\\..\\logs");
+            var res = PackLogsHelper.Pack("..\\..\\logs", 7);
             Assert.IsTrue(res);
         }
     }

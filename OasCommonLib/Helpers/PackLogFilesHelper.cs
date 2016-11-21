@@ -25,7 +25,7 @@
         }
 
         public static string LastError { get; private set; }
-        public static bool Pack(string logFolder)
+        public static bool Pack(string logFolder, int howManyDaysSaveInArchive)
         {
             bool res = false;
 
@@ -45,7 +45,7 @@
 
                 foreach (var ll in loglist)
                 {
-                    if (!IsCurrentMonth(ll, out logYearMonth))
+                    if (HowManyDaysFromNow(ll, out logYearMonth) > howManyDaysSaveInArchive)
                     {
                         if (!logs.ContainsKey(logYearMonth.ToString()))
                         {
@@ -93,10 +93,10 @@
             }
         }
 
-        public static bool IsCurrentMonth(string fileName, out YearMonthInfo logDate)
+        public static int HowManyDaysFromNow(string fileName, out YearMonthInfo logDate)
         {
-            int year, month;
-            bool res = false;
+            int year, month, day;
+            int howManyDaysFromNow = 0;
 
             fileName = Path.GetFileName(fileName.Replace('/', '\\'));
 
@@ -118,15 +118,25 @@
                     throw new Exception(String.Format("wrong month in name : '{0}'", fileName));
                 }
 
+                var index = parts[2].IndexOf('.');
+                var tmp = parts[2].Substring(0, index);
+                if (!int.TryParse(tmp, out day))
+                {
+                    throw new Exception(String.Format("wrong month in name : '{0}'", fileName));
+                }
+
                 logDate = new YearMonthInfo(year, month);
-                res = year == DateTime.Now.Year && month == DateTime.Now.Month;
+                var parsedDate = new DateTime(year, month, day);
+                var dateDiff = DateTime.Now - parsedDate.Date;
+
+                howManyDaysFromNow = dateDiff.Days;
             }
             else
             {
                 throw new Exception(String.Format("wrong file name format : '{0}'", fileName));
             }
 
-            return res;
+            return howManyDaysFromNow;
         }
     }
 }
