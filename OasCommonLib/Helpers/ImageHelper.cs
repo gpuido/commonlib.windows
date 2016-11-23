@@ -27,9 +27,7 @@
         public static bool IsImageMissing(string imageName)
         {
             var imagePath = ImagePath(imageName);
-            bool fileExists = File.Exists(imagePath);
-            bool fileHasCorrectSize = FileHelper.Length(imagePath) > FileHelper.MinimalLength;
-            return !(fileExists && fileHasCorrectSize);
+            return !FileHelper.Exists(imagePath);
         }
 
         public static string CaseImageFolder(long envelopeId)
@@ -51,9 +49,7 @@
         public static bool IsCaseImageMissing(long envelopeId, string imageName)
         {
             var imagePath = CaseImagePath(envelopeId, imageName);
-            bool fileExists = File.Exists(imagePath);
-            bool fileHasCorrectSize = FileHelper.Length(imagePath) > FileHelper.MinimalLength;
-            return !(fileExists && fileHasCorrectSize);
+            return !FileHelper.Exists(imagePath);
         }
 
         public static string CaseAudioFolder(long envelopeId)
@@ -76,9 +72,7 @@
         public static bool IsAudioMissing(long envelopeId, string audioName)
         {
             string audioPath = CaseAudioPath(envelopeId, audioName);
-            bool fileExists = File.Exists(audioPath);
-            bool fileHasCorrectSize = FileHelper.Length(audioPath) > FileHelper.MinimalLength;
-            return !(fileExists && fileHasCorrectSize);
+            return !FileHelper.Exists(audioPath);
         }
     }
 }

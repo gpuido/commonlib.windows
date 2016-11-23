@@ -13,8 +13,6 @@
     {
         public static readonly string TAG = "NewVersion";
 
-        private static readonly LogQueue _log = LogQueue.Instance;
-
 #if DEBUG
         public static readonly string LatestVersionJson = "http://ccpro.no-ip.org/versions.json";
 #else
@@ -34,19 +32,17 @@
         {
             bool res = false;
 
-            Error = string.Empty;
+            LastError = String.Empty;
             try
             {
                 long currentAppVersion = GetVersion(currentVersion);
-                string serverVersion = GetServerFileVersion(productName);
+                string serverVersion;
+                var rs = GetServerFileVersion(productName, out serverVersion);
+                if (!rs)
+                {
+                    return false;
+                }
                 long installerVersion = GetVersion(serverVersion);
-
-                _log.Add(
-                    TAG,
-                    string.Format("local binary version:{0}, remote binary version:{1}",
-                        currentVersion,
-                        serverVersion),
-                    LogItemType.Info);
 
                 if (0 != installerVersion && 0 != currentAppVersion && installerVersion > currentAppVersion)
                 {
@@ -55,18 +51,20 @@
             }
             catch (Exception ex)
             {
-                _log.AddError(TAG, ex, "IsNewVersionAvailable failed");
+                LastError = "IsNewVersionAvailable failed :" + ex.Message;
             }
 
             return res;
         }
 
-        private static string GetServerFileVersion(string productName)
+        private static bool GetServerFileVersion(string productName, out string installerVersion)
         {
-            string json = string.Empty;
-            string installerVersion = "unknown";
+            string json = String.Empty;
             string tmpFile = Path.GetTempFileName();
+            bool res = false;
 
+            LastError = String.Empty;
+            installerVersion = "unknown";
             try
             {
                 var url = LatestVersionJson + "?" + DateTime.Now.Ticks;
@@ -93,20 +91,19 @@
                     var l = jObj["setup_location"];
                     InstallerLocation = l[productName].Value<string>();
                     InstallerName = InstallerLocation.Substring(InstallerLocation.LastIndexOf("/") + 1);
+
+                    res = true;
                 }
             }
             catch (JsonReaderException jre)
             {
                 SaveError(jre.Message);
-                _log.AddError(
-                           TAG,
-                           jre,
-                           string.Format("json parser error: '{0}' ", json));
+                LastError = String.Format("json parser failed: {0} on '{1}'", jre.Message, json);
             }
             catch (Exception ex)
             {
                 SaveError(ex.Message + Environment.NewLine + ex.StackTrace);
-                _log.AddError(TAG, ex);
+                LastError = String.Format("json parser failed: {0}", ex.Message);
             }
 
             try
@@ -115,7 +112,7 @@
             }
             catch { }
 
-            return installerVersion;
+            return res;
         }
 
         public static long GetVersion(string version)
@@ -138,7 +135,7 @@
             return 0L;
         }
 
-        public static string Error { get; private set; }
+        public static string LastError { get; private set; }
 
         private static string _archiveName;
 
@@ -164,7 +161,7 @@
         {
             bool res = false;
             int step = 0;
-            string stepComment = string.Empty;
+            string stepComment = String.Empty;
             string downloadUrl = NewVersionHelper.InstallerLocation;
             string newArchive = Path.Combine(_downloadPath, Path.GetFileName(_archiveName));
 
@@ -176,36 +173,31 @@
 
                     if (File.Exists(newArchive))
                     {
-                        _log.Add(TAG, stepComment = string.Format("going to delete '{0}'", newArchive), LogItemType.Info);
                         File.Delete(newArchive);
                     }
 
                     step = 2;
 
-                    _log.Add(TAG, stepComment = string.Format("going to create '{0}'", _downloadPath), LogItemType.Info);
                     if (!FileHelper.CreateDirectoryRecursively(_downloadPath))
                     {
-                        Error = string.Format("cannot create temporary directory '{0}' : {1}", _downloadPath, FileHelper.LastError);
+                        LastError = string.Format("cannot create temporary directory '{0}' : {1}", _downloadPath, FileHelper.LastError);
                         return res;
                     }
 
                     step = 3;
 
-                    _log.Add(TAG, stepComment = string.Format("downloading {0} to {1}", downloadUrl, newArchive), LogItemType.Info);
                     wc.DownloadFile(downloadUrl, newArchive);
                 }
 
                 step = 4;
 
-                long archiveLength = FileHelper.Length(newArchive);
-                if (File.Exists(newArchive) && archiveLength > FileHelper.MinimalLength)
+                if (FileHelper.Exists(newArchive))
                 {
-                    _log.Add(TAG, stepComment = string.Format("downloaded '{0}' with size {1}", newArchive, archiveLength), LogItemType.Info);
                     res = true;
                 }
                 else
                 {
-                    Error = "download new version failed. zero file length : " + Path.GetFileName(newArchive);
+                    LastError = "download new version failed. zero file length : " + Path.GetFileName(newArchive);
                 }
 
                 step = 5;
@@ -213,8 +205,7 @@
             }
             catch (Exception ex)
             {
-                Error = "update download failed. error : " + ex.Message + ". step " + step + stepComment;
-                _log.AddError(TAG, ex, "update download failed. step : " + step + stepComment);
+                LastError = "update download failed. error : " + ex.Message + ". step " + step + stepComment;
             }
 
             return res;
@@ -226,7 +217,7 @@
             string source = Path.Combine(_downloadPath, _archiveName);
             string destination = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
             int step = 0;
-            string stepComment = string.Empty;
+            string stepComment = String.Empty;
 
             try
             {
@@ -240,7 +231,7 @@
                 step = 2;
                 if (!FileHelper.CreateDirectoryRecursively(destination))
                 {
-                    Error = string.Format("cannot create tempotrary directory '{0}': {1}", destination, FileHelper.LastError);
+                    LastError = string.Format("cannot create tempotrary directory '{0}': {1}", destination, FileHelper.LastError);
                     return res;
                 }
 
@@ -250,8 +241,6 @@
                 step = 4;
                 foreach (RarArchiveEntry entry in archive.Entries)
                 {
-                    _log.Add(TAG, "going to unpack : " + Path.GetFileName(entry.FilePath));
-
                     string folder;
                     if (Path.GetDirectoryName(entry.FilePath).EndsWith("x64"))
                     {
@@ -285,7 +274,7 @@
             }
             catch (Exception ex)
             {
-                Error = string.Format("failed to unpack update : '{0}', error : {1}, step : {2}", source, ex.Message, step);
+                LastError = string.Format("failed to unpack update : '{0}', error : {1}, step : {2}", source, ex.Message, step);
             }
 
             return res;

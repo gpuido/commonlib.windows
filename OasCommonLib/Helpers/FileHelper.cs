@@ -220,6 +220,11 @@
             return result;
         }
 
+        public static bool Exists(string filePath)
+        {
+            return File.Exists(filePath) && Length(filePath) > MinimalLength;
+        }
+
         public static bool CreateDirectoryRecursively(string path)
         {
             bool res = false;

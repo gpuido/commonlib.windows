@@ -95,7 +95,7 @@
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
+                LastError = "login failed :" + ex.Message;
             }
 
             return result;

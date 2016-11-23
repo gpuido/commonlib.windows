@@ -407,22 +407,9 @@ namespace OasCommonLib.Config
             }
         }
 
-        //public string OldConfigFileName
-        //{
-        //    get
-        //    {
-        //        return Path.Combine(DataFolderPath, OasConfigType == OasConfigType.ev ? "oas-config" : "evcaseproxy-config");
-        //    }
-        //}
-
         private void Read()
         {
             string configName = ConfigFileName;
-
-            //if (!File.Exists(configName))
-            //{
-            //    configName = OldConfigFileName;
-            //}
 
             InitData();
 

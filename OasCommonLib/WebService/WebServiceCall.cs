@@ -4,8 +4,6 @@ using OasCommonLib.Constants;
 using OasCommonLib.Data;
 using OasCommonLib.Data.Config;
 using OasCommonLib.Helpers;
-using OasCommonLib.Logger;
-using OasCommonLib.OasEventManager;
 using OasCommonLib.Session;
 using OasCommonLib.VinParser;
 using System;
@@ -27,8 +25,7 @@ namespace OasCommonLib.WebService
 
         public static string LastError { get; private set; }
 
-        private static readonly OasEventSource _oasEvent = GlobalEventManager.Instance.OasEventSource;
-        private static readonly LogQueue _log = LogQueue.Instance;
+        //        private static readonly OasEventSource _oasEvent = GlobalEventManager.Instance.OasEventSource;
         private static readonly Config.OasConfig _cfg = Config.OasConfig.Instance;
 
         public static string ClientInfo { get; set; }
@@ -65,6 +62,8 @@ namespace OasCommonLib.WebService
                 url = _cfg.DataServiceUrl;
             }
 
+
+            LastError = String.Empty;
             try
             {
                 // Create request and receive response
@@ -81,9 +80,9 @@ namespace OasCommonLib.WebService
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                _log.AddError(TAG, ex, "'Ping'");
-                responsebody = WebServiceCall.ErrorResponse(ex);
-                LastError = "ping failed";
+                LastError = "ping failed :" + ex.Message;
+
+                return false;
             }
 
             try
@@ -126,15 +125,14 @@ namespace OasCommonLib.WebService
                         {
                             serverInfo.DbVersion = jObj["db"].Value<string>();
                         }
-                            result = true;
+                        result = true;
                     }
                 }
             }
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                _log.AddError(TAG, ex, "error during parsing ping response");
-                LastError = "ping failed";
+                LastError = "ping failed :" + ex.Message;
             }
 
             return result;
@@ -158,16 +156,11 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'upload_file_info'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'upload_file_info'";
                 return res;
             }
 
-            if (!File.Exists(pathToFile) || FileHelper.Length(pathToFile) < FileHelper.MinimalLength)
+            if (!FileHelper.Exists(pathToFile))
             {
                 LastError = string.Format("file '{0}' doesn't exist", pathToFile);
                 return res;
@@ -251,7 +244,6 @@ namespace OasCommonLib.WebService
                 if (null != jObj[JsonStringConstants.ERROR])
                 {
                     LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                    _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                     return res;
                 }
                 if (null != jObj[JsonStringConstants.RESULT])
@@ -272,10 +264,6 @@ namespace OasCommonLib.WebService
                     else
                     {
                         LastError = "Wrong size of uploaded files " + pathToFile;
-                        _log.Add(
-                            TAG,
-                            "Wrong size of uploaded files " + pathToFile,
-                            LogItemType.Warning);
                     }
                 }
             }
@@ -285,12 +273,10 @@ namespace OasCommonLib.WebService
                 {
                     Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
-                LastError = ex.Message;
-                _log.AddError(TAG, ex, "upload_file_info failed");
+                LastError = "upload_file_info failed :" + ex.Message;
             }
 
             return res;
-
         }
 
         #region images
@@ -335,16 +321,11 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'upload_image'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'upload_image'";
                 return res;
             }
 
-            if (!File.Exists(pathToFile) || FileHelper.Length(pathToFile) < FileHelper.MinimalLength)
+            if (!FileHelper.Exists(pathToFile))
             {
                 LastError = string.Format("file '{0}' doesn't exist", pathToFile);
                 return res;
@@ -431,7 +412,6 @@ namespace OasCommonLib.WebService
                 if (null != jObj[JsonStringConstants.ERROR])
                 {
                     LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                    _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
                     return res;
                 }
                 if (null != jObj[JsonStringConstants.RESULT])
@@ -452,10 +432,6 @@ namespace OasCommonLib.WebService
                     else
                     {
                         LastError = "Wrong size of uploaded files " + pathToFile;
-                        _log.Add(
-                            TAG,
-                            "Wrong size of uploaded files " + pathToFile,
-                            LogItemType.Warning);
                     }
                 }
             }
@@ -465,8 +441,7 @@ namespace OasCommonLib.WebService
                 {
                     Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
-                LastError = ex.Message;
-                _log.AddError(TAG, ex, "fileupload failed");
+                LastError = "fileupload failed :" + ex.Message;
             }
 
             return res;
@@ -513,13 +488,13 @@ namespace OasCommonLib.WebService
             }
             catch (WebException ex)
             {
-                _log.AddError(TAG, ex);
-                responsebody = ErrorResponse(ex);
+                LastError = "login failed :" + ex.Message;
+                return null;
             }
             catch (Exception ex)
             {
-                _log.AddError(TAG, ex);
-                responsebody = ErrorResponse(ex);
+                LastError = "login failed :" + ex.Message;
+                return null;
             }
 
             JObject jObj = JObject.Parse(responsebody);
@@ -534,9 +509,10 @@ namespace OasCommonLib.WebService
 
             if (null != jObj[JsonStringConstants.ERROR])
             {
-                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
-                return si;
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                return null;
             }
+
             if (null != jObj[JsonStringConstants.RESULT])
             {
                 var result = jObj[JsonStringConstants.RESULT];
@@ -603,16 +579,14 @@ namespace OasCommonLib.WebService
             catch (WebException ex)
             {
                 LastError = "login failed.error : " + ex.Message;
-                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-                _log.AddError(TAG, ex, LastError);
+                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
 
                 responsebody = WebServiceCall.ErrorResponse(ex);
             }
             catch (Exception ex)
             {
                 LastError = "login failed.error : " + ex.Message;
-                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-                _log.AddError(TAG, ex, LastError);
+                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
                 responsebody = WebServiceCall.ErrorResponse(ex);
             }
 
@@ -629,7 +603,6 @@ namespace OasCommonLib.WebService
             if (null != jObj[JsonStringConstants.ERROR])
             {
                 LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                _log.Add(TAG, LastError, LogItemType.Error);
             }
             if (null != jObj[JsonStringConstants.RESULT])
             {
@@ -659,9 +632,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                responsebody = ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "edmunds vin parser failed : " + ex.Message;
+                return false;
             }
 
             EdmundsJsonVinParser parser = new EdmundsJsonVinParser(vin);
@@ -673,8 +645,7 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                LastError = parser.LastError;
-                _log.Add(TAG, LastError, LogItemType.Error);
+                LastError = "edmunds vin parser failed : " + parser.LastError;
             }
 
             return res;
@@ -696,9 +667,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                responsebody = ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "mhis vin parser failed : " + ex.Message;
+                return false;
             }
 
             NHTSAJsonVinParser parser = new NHTSAJsonVinParser(vin);
@@ -710,8 +680,7 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                LastError = parser.LastError;
-                _log.Add(TAG, LastError, LogItemType.Error);
+                LastError = "mhis vin parser failed : " + parser.LastError;
             }
 
             return res;
@@ -731,12 +700,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'read_addinfo'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'read_addinfo'";
                 return res;
             }
 
@@ -768,9 +732,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                responsebody = ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "read_vin_info faile :" + ex.Message;
+                return false;
             }
 
             JToken jObj = JObject.Parse(responsebody);
@@ -789,8 +752,7 @@ namespace OasCommonLib.WebService
             }
             else
             {
-                LastError = parser.LastError;
-                _log.Add(TAG, LastError, LogItemType.Error);
+                LastError = "read_vin_info faile :" + parser.LastError;
             }
 
             return res;
@@ -809,12 +771,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'read_addinfo'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found 'save_vin_info'";
                 return res;
             }
 
@@ -851,9 +808,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                responsebody = ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "save_vin_info failed :" + ex.Message;
+                return false;
             }
 
             JObject jObj = JObject.Parse(responsebody);
@@ -868,8 +824,7 @@ namespace OasCommonLib.WebService
 
             if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                LastError = "save_vin_info failed :" + jObj[JsonStringConstants.ERROR].Value<string>();
                 return res;
             }
             if (null != jObj[JsonStringConstants.RESULT])
@@ -898,12 +853,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'read_addinfo'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'update_vin_info'";
                 return res;
             }
 
@@ -940,9 +890,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                responsebody = ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "failed in update_vin_info :" + ex.Message;
+                return false;
             }
 
             JObject jObj = JObject.Parse(responsebody);
@@ -957,8 +906,7 @@ namespace OasCommonLib.WebService
 
             if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                LastError = "failed in update_vin_info :" + jObj[JsonStringConstants.ERROR].Value<string>();
                 return res;
             }
             if (null != jObj[JsonStringConstants.RESULT])
@@ -984,12 +932,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'read_addinfo'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'read_vin_info'";
                 return res;
             }
 
@@ -1020,9 +963,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                responsebody = WebServiceCall.ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "failed in read_vin_info" + ex.Message;
+                return false;
             }
 
             try
@@ -1039,8 +981,7 @@ namespace OasCommonLib.WebService
 
                 if (null != jObj[JsonStringConstants.ERROR])
                 {
-                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                    _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                    LastError = "failed in read_vin_info" + jObj[JsonStringConstants.ERROR].Value<string>();
                     return res;
                 }
                 if (null != jObj[JsonStringConstants.RESULT])
@@ -1059,8 +1000,7 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                _log.AddError(TAG, ex);
+                LastError = "failed in read_vin_info" + ex.Message;
             }
 
             return res;
@@ -1070,7 +1010,7 @@ namespace OasCommonLib.WebService
         #region download data files
         public static bool DownloadAdditionalInfo(CommonAdditionalInfo cai, string pathToImage)
         {
-            if (File.Exists(pathToImage) && FileHelper.Length(pathToImage) > FileHelper.MinimalLength)
+            if (FileHelper.Exists(pathToImage))
             {
                 return true;
             }
@@ -1154,7 +1094,7 @@ namespace OasCommonLib.WebService
                 }
                 stage = 1;
 
-                if (File.Exists(pathToImage) && FileHelper.Length(pathToImage) < FileHelper.MinimalLength)
+                if (FileHelper.Exists(pathToImage))
                 {
                     stage = 2;
                     string text = File.ReadAllText(pathToImage);
@@ -1176,8 +1116,7 @@ namespace OasCommonLib.WebService
                     stage = 3;
                     if (null != error)
                     {
-                        LastError = string.Format("file '{0}' download error: '{1}', stage : {2}", requestParameters, error.ToString(), stage);
-                        _log.Add(TAG, LastError, LogItemType.Error);
+                        LastError = String.Format("file '{0}' download error: '{1}', stage : {2}", requestParameters, error.ToString(), stage);
                         return res;
                     }
                 }
@@ -1187,17 +1126,13 @@ namespace OasCommonLib.WebService
             }
             catch (JsonException jre)
             {
-                _log.AddError(TAG, jre, "stage: " + stage);
-                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace + Environment.NewLine + "stage: " + stage);
+                LastError = jre.Message + Environment.NewLine + jre.StackTrace + Environment.NewLine + "stage: " + stage;
+                Debug.Fail(LastError);
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                _log.AddError(
-                            TAG,
-                            ex,
-                            string.Format("file '{0}' download error, stage: {1}", downloadUrl, stage));
-                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                LastError = String.Format("file '{0}' download error :{1}, stage: {2}", downloadUrl, ex.Message, stage);
+                Debug.Fail(LastError);
             }
             return res;
         }
@@ -1236,7 +1171,7 @@ namespace OasCommonLib.WebService
                     wc.DownloadFile(downloadUrl, caseAudioName);
                 }
 
-                if (File.Exists(caseAudioName) && FileHelper.Length(caseAudioName) < FileHelper.MinimalLength)
+                if (FileHelper.Exists(caseAudioName))
                 {
                     string text = File.ReadAllText(caseAudioName);
                     JObject jObj = JObject.Parse(text);
@@ -1251,7 +1186,7 @@ namespace OasCommonLib.WebService
 
                     if (null != jObj[JsonStringConstants.ERROR])
                     {
-                        _log.Add(TAG, "server download failed : " + jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                        LastError = "server download failed : " + jObj[JsonStringConstants.ERROR].Value<string>();
                     }
                     else
                     {
@@ -1261,17 +1196,15 @@ namespace OasCommonLib.WebService
             }
             catch (JsonException jre)
             {
-                Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
-                _log.AddError(TAG, jre);
+                LastError = "server download failed : " + jre.Message + Environment.NewLine + jre.StackTrace;
+                Debug.Fail(LastError);
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
-                _log.AddError(
-                            TAG,
-                            ex,
-                            string.Format("file '{0}' download error", downloadUrl));
+                LastError = "server download failed : " + ex.Message + Environment.NewLine + ex.StackTrace;
+                Debug.Fail(LastError);
             }
+
             return res;
         }
 
@@ -1304,12 +1237,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'read_audioinfo'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'read_audioinfo'";
                 return res;
             }
 
@@ -1341,9 +1269,8 @@ namespace OasCommonLib.WebService
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                LastError = ex.Message;
-                responsebody = WebServiceCall.ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "failed in read_audioinfo :" + ex.Message;
+                return false;
             }
 
             JObject jObj = JObject.Parse(responsebody);
@@ -1358,10 +1285,10 @@ namespace OasCommonLib.WebService
 
             if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                LastError = "failed in read_audioinfo :" + jObj[JsonStringConstants.ERROR].Value<string>();
                 return res;
             }
+
             if (null != jObj[JsonStringConstants.RESULT])
             {
                 anList = new List<CommonInfo>();
@@ -1411,12 +1338,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'del_common_add_info'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found 'del_common_add_info'";
                 return res;
             }
 
@@ -1454,9 +1376,8 @@ namespace OasCommonLib.WebService
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                LastError = ex.Message;
-                responsebody = WebServiceCall.ErrorResponse(ex);
-                _log.AddError(TAG, ex);
+                LastError = "failed in del_common_add_info :" + ex.Message;
+                return false;
             }
 
             JObject jObj = JObject.Parse(responsebody);
@@ -1471,8 +1392,7 @@ namespace OasCommonLib.WebService
 
             if (null != jObj[JsonStringConstants.ERROR])
             {
-                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                _log.Add(TAG, jObj[JsonStringConstants.ERROR].Value<string>(), LogItemType.Error);
+                LastError = "failed in del_common_add_info :" + jObj[JsonStringConstants.ERROR].Value<string>();
                 return res;
             }
             if (null != jObj[JsonStringConstants.RESULT])
@@ -1480,9 +1400,6 @@ namespace OasCommonLib.WebService
                 var result = jObj[JsonStringConstants.RESULT];
 
                 deletedId = result["deleted"].Value<int>();
-                _log.Add(
-                   TAG,
-                   "deleted id : " + deletedId);
 
                 res = true;
             }
@@ -1505,12 +1422,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   "no session info found in 'latest_addinfo'",
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'read_missing_files'";
                 return false;
             }
 
@@ -1532,9 +1444,7 @@ namespace OasCommonLib.WebService
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 LastError = "check missing images. error : " + ex.Message;
-                _log.AddError(TAG, ex, LastError);
-
-                responsebody = WebServiceCall.ErrorResponse(ex);
+                return false;
             }
 
             try
@@ -1543,10 +1453,10 @@ namespace OasCommonLib.WebService
 
                 if (null != jObj[JsonStringConstants.ERROR])
                 {
-                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                    _log.Add(TAG, LastError, LogItemType.Error);
+                    LastError = "failed in read_missing_files :" + jObj[JsonStringConstants.ERROR].Value<string>();
                     return false;
                 }
+
                 if (null != jObj[JsonStringConstants.RESULT])
                 {
                     var result = jObj[JsonStringConstants.RESULT];
@@ -1582,13 +1492,11 @@ namespace OasCommonLib.WebService
             {
                 Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
                 LastError = "get latest info failed. error : " + jre.Message;
-                _log.AddError(TAG, jre, LastError + Environment.NewLine + responsebody);
             }
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
                 LastError = "get latest info failed. error : " + ex.Message;
-                _log.AddError(TAG, ex, LastError);
             }
 
             return res;
@@ -1611,12 +1519,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   "no session info found in 'read_full_case'",
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'read_full_config'";
                 return res;
             }
 
@@ -1635,25 +1538,23 @@ namespace OasCommonLib.WebService
             }
             catch (Exception ex)
             {
-                LastError = "read case failed. error : " + ex.Message;
-                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-                _log.AddError(TAG, ex, LastError);
-
-                responsebody = WebServiceCall.ErrorResponse(ex);
+                LastError = "read config failed. error : " + ex.Message;
+                return false;
             }
 
             if (string.IsNullOrEmpty(responsebody))
             {
+                LastError = "emprt server response in read_full_config";
                 return false;
             }
+
             try
             {
                 JObject jObj = JObject.Parse(responsebody);
 
                 if (null != jObj[JsonStringConstants.ERROR])
                 {
-                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                    _log.Add(TAG, LastError, LogItemType.Error);
+                    LastError = "failed in read_full_config :" + jObj[JsonStringConstants.ERROR].Value<string>();
                     return false;
                 }
 
@@ -1722,15 +1623,13 @@ namespace OasCommonLib.WebService
             }
             catch (JsonReaderException jre)
             {
-                LastError = "read case failed. error : " + jre.Message;
-                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-                _log.AddError(TAG, jre, LastError);
+                LastError = "failed in read_full_config :" + jre.Message;
+                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
             }
             catch (Exception ex)
             {
-                LastError = "read case failed. error : " + ex.Message;
-                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-                _log.AddError(TAG, ex, LastError);
+                LastError = "failed in read_full_config :" + ex.Message;
+                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
             }
 
             return res;
@@ -1750,12 +1649,7 @@ namespace OasCommonLib.WebService
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
             {
-                LastError = "no session info found";
-                _log.Add(
-                   TAG,
-                   string.Format("no session info found in 'SaveAssignment'"),
-                   LogItemType.Error);
-
+                LastError = "no session info found in 'save error'";
                 return result;
             }
 
@@ -1780,8 +1674,8 @@ namespace OasCommonLib.WebService
             }
             catch (Exception e)
             {
+                LastError = "failed in save log :" + e.Message;
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                _log.AddError(TAG, e);
             }
 
             return result;
