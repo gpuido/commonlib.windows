@@ -1,5 +1,6 @@
 ﻿namespace OasCommonLib.Helpers
 {
+    using Constants;
     using System;
 
     public class FormatHelper
@@ -24,6 +25,16 @@
                 max /= scale;
             }
             return "0";
+        }
+
+        public static string HtmlDecode(string data)
+        {
+            if (String.IsNullOrEmpty(data))
+            {
+                return String.Empty;
+            }
+
+            return data.Replace("+", WebStringConstants.Space).Replace("%20", WebStringConstants.Space);
         }
     }
 }
