@@ -579,15 +579,12 @@ namespace OasCommonLib.WebService
             catch (WebException ex)
             {
                 LastError = "login failed.error : " + ex.Message;
-                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-
-                responsebody = WebServiceCall.ErrorResponse(ex);
+                return result;
             }
             catch (Exception ex)
             {
                 LastError = "login failed.error : " + ex.Message;
-                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
-                responsebody = WebServiceCall.ErrorResponse(ex);
+                return result;
             }
 
             JObject jObj = JObject.Parse(responsebody);
@@ -1624,12 +1621,10 @@ namespace OasCommonLib.WebService
             catch (JsonReaderException jre)
             {
                 LastError = "failed in read_full_config :" + jre.Message;
-                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
             }
             catch (Exception ex)
             {
                 LastError = "failed in read_full_config :" + ex.Message;
-                //                _oasEvent.RaiseEvent(OasEventType.ErrorMessage, LastError);
             }
 
             return res;
