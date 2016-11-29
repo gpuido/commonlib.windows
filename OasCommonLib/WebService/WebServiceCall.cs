@@ -1127,12 +1127,12 @@ namespace OasCommonLib.WebService
             catch (JsonException jre)
             {
                 LastError = jre.Message + Environment.NewLine + jre.StackTrace + Environment.NewLine + "stage: " + stage;
-                Debug.Fail(LastError);
+//                Debug.Fail(LastError);
             }
             catch (Exception ex)
             {
                 LastError = String.Format("file '{0}' download error :{1}, stage: {2}", downloadUrl, ex.Message, stage);
-                Debug.Fail(LastError);
+//                Debug.Fail(LastError);
             }
             return res;
         }

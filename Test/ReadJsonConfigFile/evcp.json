@@ -1,0 +1,56 @@
+﻿{
+  "CaseConfig": {
+    "EMSCasePath": [
+      "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\EMS\\Mitchell",
+      "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\EMS\\CCC Pathways",
+      "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\EMS\\Audatex"
+    ],
+    "MCFPath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\MCF\\",
+    "DBFCasePath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\DBF\\",
+    "RemovedCasePath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\RemovedDBF\\",
+    "CaseExt": "*.ENV",
+    "ImagePath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\Images\\",
+    "ImageExts": "*.jpg;*.png;*.tif",
+    "CaseImagePath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\CaseImages\\",
+    "CaseAudioPath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\CaseAudioNotes\\"
+  },
+  "WebConfig": {
+    "Url": "http://estvis.com/cgi-bin/oaservice.cgi",
+    "LoginInfo": "_0276MDAwNTAwMDZZMk53Y205M2FHbDBaWEk9"
+  },
+  "WebServer": {
+    "RunServer": false,
+    "Port": 18080,
+    "Ips": []
+  },
+  "LogPath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\Logs\\",
+  "DataPath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\CaseData\\",
+  "ImageExportPath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\Result\\",
+  "LocalStoragePath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\LocalData\\",
+  "DoNotConnect": false,
+  "AutoLogin": true,
+  "MaximizeToKiosk": false,
+  "ShowPreconditions": true,
+  "StandardDescription": [
+    "Dirt in paint",
+    "Scratches",
+    "Dents",
+    "Sand marks",
+    "Bug damage",
+    "Damaged",
+    "Missing",
+    "Chips",
+    "Color"
+  ],
+  "ServerPollTimeout": 300,
+  "WatcherDelay": 5,
+  "StartAppAutomatically": false,
+  "SqLiteDbPath": "C:\\Users\\sergey s prozhogin\\AppData\\Roaming\\OAS\\SqLite\\",
+  "HowManyDaysToShow": 1,
+  "ShowNotification": false,
+  "CloseToTray": true,
+  "SortHeader": 7,
+  "SortHeaderOrder": false,
+  "StampImages": false,
+  "CurrentVersion": "1.0.3.6"
+}
