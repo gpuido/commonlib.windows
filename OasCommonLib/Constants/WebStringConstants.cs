@@ -29,7 +29,7 @@
         public static readonly string MODEL = "model";
         public static readonly string PLATE = "plate";
         public static readonly string BUILD = "build";
-        public static readonly string MILAGE = "milage";
+        public static readonly string MILEAGE = "milage";
         public static readonly string ARRIVAL_TYPE = "arrival_type";
         public static readonly string VEH_ACTION = "veh_action";
         public static readonly string NOTE = "note";

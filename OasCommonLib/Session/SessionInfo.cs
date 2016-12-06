@@ -65,25 +65,14 @@
                 string json;
                 string session;
 
-                if (WebServiceCall.Login(login, passwd, saveSession, out session, out json))
+                if (WebServiceCall.Login(login, passwd, out session, out json))
                 {
-                    JObject jObj = JObject.Parse(json);
-                    var res = jObj["result"];
-
-                    string[] roles = res["roles"].Value<string>().Split(',');
-                    SessionId = session;
-                    CompanyId = res["company_id"].Value<int>();
-                    CompanyName = res["company_name"].Value<string>();
-                    CompanyAbbr = res["company_abbr"].Value<string>();
-                    UserId = res["user_id"].Value<int>();
-                    UserName = res["user_name"].Value<string>();
-                    UserLogin = login;
-                    Roles = roles;
-                    CompanyRole = res["company_role"].Value<string>();
-
                     if (saveSession)
                     {
-                        SetSessionInfo(SessionId, CompanyId, CompanyName, CompanyAbbr, UserId, UserName, login, Roles, CompanyRole);
+                        if (!SetSessionInfo(login, session, json))
+                        {
+                            return result;
+                        }
                     }
 
                     result = true;
@@ -99,6 +88,46 @@
             }
 
             return result;
+        }
+
+        public static SessionInfo Parse(string login, string session, string json)
+        {
+            SessionInfo si = new SessionInfo();
+            JObject jObj = JObject.Parse(json);
+            JObject result = (JObject)jObj["result"];
+
+            string[] roles = result["roles"].Value<string>().Split(',');
+
+            int companyId = result["company_id"].Value<int>();
+            string companyName = result["company_name"].Value<string>();
+            string companyAbbr = result["company_abbr"].Value<string>();
+            int userId = result["user_id"].Value<int>();
+            string userName = result["user_name"].Value<string>();
+            string companyRole = result["company_role"].Value<string>();
+
+            si.SetSessionInfo(session, companyId, companyName, companyAbbr, userId, userName, login, roles, companyRole);
+
+            return si;
+        }
+
+
+        public bool SetSessionInfo(string login, string session, string json)
+        {
+            bool res = false;
+
+            try
+            {
+                var si = Parse(login, session, json);
+                SetSessionInfo(session, si.CompanyId, si.CompanyName, si.CompanyAbbr, si.UserId, si.UserName, si.UserLogin, si.Roles, si.CompanyRole);
+
+                res = true;
+            }
+            catch (Exception ex)
+            {
+                LastError = "error in set session :" + ex.Message;
+            }
+
+            return res;
         }
 
         public void SetSessionInfo(string sessionId, int companyId, string companyName, string companyAbbr, int userId, string userName, string login, string[] roles, string companyRole)

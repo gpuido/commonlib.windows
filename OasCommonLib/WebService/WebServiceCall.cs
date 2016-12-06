@@ -448,96 +448,9 @@ namespace OasCommonLib.WebService
         }
         #endregion
 
-        public static SessionInfo Login(string login, string passwd, bool saveSession)
-        {
-            SessionInfo si = null;
-            string responsebody = string.Empty;
-            NameValueCollection reqparm = new NameValueCollection();
-            CookieContainer cookies = new CookieContainer();
-            string session = string.Empty;
-            string DataServiceUrl = _cfg.DataServiceUrl;
+       
 
-            if (!_cfg.EncodeTraffic)
-            {
-                reqparm.Add(WebStringConstants.ACTION, "login");
-                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
-                reqparm.Add(WebStringConstants.LOGIN, login);
-                reqparm.Add(WebStringConstants.PASSWD, passwd);
-            }
-            else
-            {
-                string data = ActionParametersHelper.GenerateParameters(WebStringConstants.LOGIN, ClientInfo, new List<KeyValuePair<string, object>>()
-                {
-                    new KeyValuePair<string, object>(WebStringConstants.LOGIN, login),
-                    new KeyValuePair<string, object>(WebStringConstants.PASSWD, passwd)
-                });
-                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
-            }
-
-            try
-            {
-                using (WebClientEx client = new WebClientEx(cookies))
-                {
-                    byte[] responsebytes = client.UploadValues(DataServiceUrl, WebStringConstants.POST, reqparm);
-                    responsebody = Encoding.UTF8.GetString(responsebytes);
-                }
-
-                var cookie = cookies.List().FirstOrDefault((it) => it.Name.Equals(WebStringConstants.SESSION));
-                CookieDomain = cookie.Domain;
-                session = cookie.Value;
-            }
-            catch (WebException ex)
-            {
-                LastError = "login failed :" + ex.Message;
-                return null;
-            }
-            catch (Exception ex)
-            {
-                LastError = "login failed :" + ex.Message;
-                return null;
-            }
-
-            JObject jObj = JObject.Parse(responsebody);
-
-            if (null != jObj[WebStringConstants.ENC_DATA])
-            {
-                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
-                responsebody = CoderHelper.Decode(encodedResponse);
-
-                jObj = JObject.Parse(responsebody);
-            }
-
-            if (null != jObj[JsonStringConstants.ERROR])
-            {
-                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
-                return null;
-            }
-
-            if (null != jObj[JsonStringConstants.RESULT])
-            {
-                var result = jObj[JsonStringConstants.RESULT];
-
-                string[] roles = result["roles"].Value<string>().Split(',');
-
-                si = SessionInfo.Instance;
-
-                int companyId = result["company_id"].Value<int>();
-                string companyName = result["company_name"].Value<string>();
-                string companyAbbr = result["company_abbr"].Value<string>();
-                int userId = result["user_id"].Value<int>();
-                string userName = result["user_name"].Value<string>();
-                string companyRole = result["company_role"].Value<string>();
-
-                if (saveSession)
-                {
-                    si.SetSessionInfo(session, companyId, companyName, companyAbbr, userId, userName, login, roles, companyRole);
-                }
-            }
-
-            return si;
-        }
-
-        public static bool Login(string login, string passwd, bool saveSession, out string session, out string json)
+        public static bool Login(string login, string passwd, out string session, out string json)
         {
             bool result = false;
             string responsebody = string.Empty;
@@ -1091,7 +1004,7 @@ namespace OasCommonLib.WebService
                 }
                 stage = 1;
 
-                if (FileHelper.Exists(pathToImage))
+                if (File.Exists(pathToImage) && FileHelper.Length(pathToImage) < FileHelper.MinimalLength)
                 {
                     stage = 2;
                     string text = File.ReadAllText(pathToImage);
