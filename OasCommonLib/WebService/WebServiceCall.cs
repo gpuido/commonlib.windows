@@ -25,7 +25,6 @@ namespace OasCommonLib.WebService
 
         public static string LastError { get; private set; }
 
-        //        private static readonly OasEventSource _oasEvent = GlobalEventManager.Instance.OasEventSource;
         private static readonly Config.OasConfig _cfg = Config.OasConfig.Instance;
 
         public static string ClientInfo { get; set; }
@@ -448,8 +447,6 @@ namespace OasCommonLib.WebService
         }
         #endregion
 
-       
-
         public static bool Login(string login, string passwd, out string session, out string json)
         {
             bool result = false;
@@ -522,7 +519,6 @@ namespace OasCommonLib.WebService
 
             return result;
         }
-
 
         #region vin info reader/parse/update
         public static bool EdmundsVinInfo(string vin, out VinInfo vinInfo)
@@ -1542,7 +1538,6 @@ namespace OasCommonLib.WebService
 
             return res;
         }
-
 
         public static bool SendErrorReport(Exception ex, string appName)
         {
