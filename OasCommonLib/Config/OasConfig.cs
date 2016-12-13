@@ -280,6 +280,9 @@ namespace OasCommonLib.Config
         // keep session - auto login if credentials are available
         public bool AutoLogin { get; set; }
 
+        // run export for every single page added to case
+        public bool AutoExport { get; set; }
+
         // Miximize window to kiosk mode
         public bool MaximizeToKiosk { get; set; }
 
@@ -474,7 +477,7 @@ namespace OasCommonLib.Config
 #if DEBUG
                 Data.ServerPollTimeout = 60; //secs
 #else
-                    Data.ServerPollTimeout = 60 * 5; //secs
+                Data.ServerPollTimeout = 60 * 5; //secs
 #endif
             }
 
@@ -483,7 +486,7 @@ namespace OasCommonLib.Config
 #if DEBUG
                 Data.UiConfig.UITimeInMinutes = 120; //secs
 #else
-                    Data.ServerPollTimeout = 60 * 5; //secs
+                Data.ServerPollTimeout = 60 * 5; //secs
 #endif
             }
 
@@ -492,7 +495,7 @@ namespace OasCommonLib.Config
 #if DEBUG
                 Data.HowManyDaysToShow = 100; //days
 #else
-                    Data.HowManyDaysToShow = 14; //days
+                Data.HowManyDaysToShow = 14; //days
 #endif
             }
 
@@ -592,6 +595,12 @@ namespace OasCommonLib.Config
             if (null != jt)
             {
                 ocd.AutoLogin = jt.Value<bool>();
+            }
+
+            jt = o["AutoExport"];
+            if (null != jt)
+            {
+                ocd.AutoExport = jt.Value<bool>();
             }
 
             jt = o["MaximizeToKiosk"];
@@ -702,6 +711,8 @@ namespace OasCommonLib.Config
             Data.LocalStoragePath = DataFolderPath + @"\LocalData\";
 
             Data.AutoLogin = true;
+            Data.AutoExport = true;
+
             Data.StandardDescription = new string[] { "Dirt in paint", "Scratches", "Dents", "Sand marks", "Bug damage", "Damaged", "Missing", "Chips", "Color" };
 
             Data.MaximizeToKiosk = false;
@@ -716,8 +727,8 @@ namespace OasCommonLib.Config
             Data.HowManyDaysToShow = OasConfigType == OasConfigType.evcp ? 1 : 100;
             Data.ServerPollTimeout = 60; //secs
 #else
-                    Data.HowManyDaysToShow = OasConfigType == OasConfigType.evcp ? 1 : 14;
-                    Data.ServerPollTimeout = 60 * 5; //secs
+            Data.HowManyDaysToShow = OasConfigType == OasConfigType.evcp ? 1 : 14;
+            Data.ServerPollTimeout = 60 * 5; //secs
 #endif
 
         }
@@ -1152,6 +1163,18 @@ namespace OasCommonLib.Config
             set
             {
                 Data.AutoLogin = value;
+            }
+        }
+
+        public bool AutoExport
+        {
+            get
+            {
+                return Data.AutoExport;
+            }
+            set
+            {
+                Data.AutoExport = value;
             }
         }
 
