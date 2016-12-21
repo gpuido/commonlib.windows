@@ -923,14 +923,14 @@ namespace OasCommonLib.WebService
             return DownloadInfoImage(cai.EnvelopeId, cai.Reference, pathToImage, cai.InfoType);
         }
 
-        public static bool DownloadPrecondition(long envelopeId, long precNumber, string pathToImage)
+        public static bool DownloadPrecondition(long envelopeId, long reference, string pathToImage)
         {
-            return DownloadInfoImage(envelopeId, precNumber, pathToImage, InfoTypeEnum.Precondition);
+            return DownloadInfoImage(envelopeId, reference, pathToImage, InfoTypeEnum.Precondition);
         }
 
-        public static bool DownloadAdditionalInfoImage(long envelopeId, long dbReference, string pathToImage)
+        public static bool DownloadAdditionalInfoImage(long envelopeId, long reference, string pathToImage)
         {
-            return DownloadInfoImage(envelopeId, dbReference, pathToImage, InfoTypeEnum.DetailAddInfo);
+            return DownloadInfoImage(envelopeId, reference, pathToImage, InfoTypeEnum.DetailAddInfo);
         }
 
         public static bool DownloadSupplementInfoImage(long envelopeId, string pathToImage)
@@ -938,7 +938,7 @@ namespace OasCommonLib.WebService
             return DownloadInfoImage(envelopeId, -1L, pathToImage, InfoTypeEnum.Supplement);
         }
 
-        public static bool DownloadInfoImage(long envelopeId, long dbReference, string pathToImage, InfoTypeEnum infoType)
+        public static bool DownloadInfoImage(long envelopeId, long reference, string pathToImage, InfoTypeEnum infoType)
         {
             bool res = false;
             string downloadUrl;
@@ -974,9 +974,9 @@ namespace OasCommonLib.WebService
 
             LastError = string.Empty;
             string requestParameters;
-            if (dbReference > 0L)
+            if (reference > 0L)
             {
-                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + dbReference.ToString() + "/" + imageName;
+                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + reference.ToString() + "/" + imageName;
             }
             else
             {

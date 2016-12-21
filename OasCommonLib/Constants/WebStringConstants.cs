@@ -8,8 +8,6 @@
         public static readonly string INFO_TYPE = "info_type";
         public static readonly string ID = "id";
         public static readonly string FILE_NAME = "file_name";
-        public static readonly string PREC_NUMBER = "prec_number";
-        public static readonly string PREC_NUM = "prec_num";
         public static readonly string DAYS = "days";
         public static readonly string TZ = "tz";
         public static readonly string PROOF = "proof";
