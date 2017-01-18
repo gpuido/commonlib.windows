@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using OasCommonLib.Constants;
 using OasCommonLib.Data;
 using OasCommonLib.Data.Config;
+using OasCommonLib.Data.Insurance;
 using OasCommonLib.Helpers;
 using OasCommonLib.Session;
 using OasCommonLib.VinParser;
@@ -1408,7 +1409,7 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds, out List<AddInfoTypeInfo> aitList)
+        public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds, out List<AddInfoTypeInfo> aitList, out List<InsuranceGroupInfo> insList)
         {
             bool res = false;
             string responsebody = string.Empty;
@@ -1420,6 +1421,7 @@ namespace OasCommonLib.WebService
             cfgOperCodes = new List<OperationCode>();
             cfgPreconds = new List<PreconditionInfo>();
             aitList = new List<AddInfoTypeInfo>();
+            insList = new List<InsuranceGroupInfo>();
             LastError = string.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -1450,7 +1452,7 @@ namespace OasCommonLib.WebService
 
             if (string.IsNullOrEmpty(responsebody))
             {
-                LastError = "emprt server response in read_full_config";
+                LastError = "empty server response in read_full_config";
                 return false;
             }
 
@@ -1521,6 +1523,15 @@ namespace OasCommonLib.WebService
                         foreach (var ait in aiTypes)
                         {
                             aitList.Add(AddInfoTypeInfo.Parse(ait));
+                        }
+                    }
+
+                    var insurances = result["Insurances"];
+                    if (null != insurances)
+                    {
+                        foreach (var ins in insurances)
+                        {
+                            insList.Add(InsuranceGroupInfo.Parse(ins));
                         }
                     }
                 }

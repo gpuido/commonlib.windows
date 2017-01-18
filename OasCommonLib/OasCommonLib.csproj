@@ -84,6 +84,8 @@
     <Compile Include="Data\Config\OperationCode.cs" />
     <Compile Include="Data\Enums\InfoTypeEnum.cs" />
     <Compile Include="Data\EstimatorList.cs" />
+    <Compile Include="Data\Insurance\InsuranceGroupInfo.cs" />
+    <Compile Include="Data\Insurance\InsuranceList.cs" />
     <Compile Include="Data\PreconditionInfo.cs" />
     <Compile Include="Data\ServerInfo.cs" />
     <Compile Include="EventManager\EventSource.cs" />

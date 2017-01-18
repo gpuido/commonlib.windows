@@ -37,8 +37,10 @@
         public static readonly string SESSION = "session";
         public static readonly string DATA = "data";
         public static readonly string CASE_NAME = "case_name";
-        public static readonly string CASE_OPEN_COMPANY_ID = "case_open_company_id";
+        public static readonly string INSURANCE_GRP_ID = "ins_grp_id";
         public static readonly string ASSIGNED_COMPANY_ID = "assigned_company_id";
+
+        public static readonly string CASE_OWNER_ID = "case_owner_id";
 
         public static readonly string ENC_DATA = "_d";
         public static readonly string POST = "post";

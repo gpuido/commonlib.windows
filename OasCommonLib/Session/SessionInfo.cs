@@ -35,6 +35,7 @@
         public string UserName { get; private set; }
         public string UserLogin { get; private set; }
         public string[] Roles { get; private set; }
+        public long InsuranceGroupId { get; private set; }
 
         public string CompanyRole { get; private set; }
         public string AuthKey { get; private set; }
@@ -104,8 +105,9 @@
             int userId = result["user_id"].Value<int>();
             string userName = result["user_name"].Value<string>();
             string companyRole = result["company_role"].Value<string>();
+            long insGrpId = result["ins_grp_id"].Value<long>();
 
-            si.SetSessionInfo(session, companyId, companyName, companyAbbr, userId, userName, login, roles, companyRole);
+            si.SetSessionInfo(session, companyId, companyName, companyAbbr, userId, userName, login, roles, companyRole, insGrpId);
 
             return si;
         }
@@ -118,7 +120,7 @@
             try
             {
                 var si = Parse(login, session, json);
-                SetSessionInfo(session, si.CompanyId, si.CompanyName, si.CompanyAbbr, si.UserId, si.UserName, si.UserLogin, si.Roles, si.CompanyRole);
+                SetSessionInfo(session, si.CompanyId, si.CompanyName, si.CompanyAbbr, si.UserId, si.UserName, si.UserLogin, si.Roles, si.CompanyRole, si.InsuranceGroupId);
 
                 res = true;
             }
@@ -130,7 +132,7 @@
             return res;
         }
 
-        public void SetSessionInfo(string sessionId, int companyId, string companyName, string companyAbbr, int userId, string userName, string login, string[] roles, string companyRole)
+        public void SetSessionInfo(string sessionId, int companyId, string companyName, string companyAbbr, int userId, string userName, string login, string[] roles, string companyRole, long insGrpId)
         {
             SessionId = sessionId;
             UserId = userId;
@@ -141,6 +143,7 @@
             UserLogin = login;
             Roles = roles;
             CompanyRole = companyRole;
+            InsuranceGroupId = insGrpId;
         }
     }
 }

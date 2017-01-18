@@ -239,7 +239,7 @@ namespace OasCommonLib.Config
 
         public UIData()
         {
-            UITimeInMinutes = 120;
+            UITimeInMinutes = 60;
         }
 
         public void ExtractData(JToken data)
@@ -248,12 +248,14 @@ namespace OasCommonLib.Config
             if (null != jt)
             {
                 UITimeInMinutes = jt.Value<int>();
+                UITimeInMinutes = Math.Min(UITimeInMinutes, 60);
+                UITimeInMinutes = Math.Max(UITimeInMinutes, 30);
             }
         }
 
         public void InitDefault(string dataPath)
         {
-            UITimeInMinutes = 120; // 2 hours by default
+            UITimeInMinutes = 60; // 2 hours by default
         }
     }
 
