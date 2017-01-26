@@ -23,6 +23,7 @@ namespace OasCommonLib.Data
             FileMissing = ci.FileMissing;
             ProofStamp = ci.ProofStamp;
             TZ = ci.TZ;
+            UserId = ci.UserId;
         }
 
         public CommonAdditionalInfo() : base()
@@ -49,6 +50,7 @@ namespace OasCommonLib.Data
                 cai.FileMissing = ci.FileMissing;
                 cai.ProofStamp = ci.ProofStamp;
                 cai.TZ = ci.TZ;
+                cai.UserId = ci.UserId;
             }
             catch (Exception ex)
             {

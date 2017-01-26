@@ -280,7 +280,7 @@ namespace OasCommonLib.WebService
         }
 
         #region images
-        public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, string tz, string proof, out long uploadedId)
+        public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, string tz, string proof, long userId, out long uploadedId)
         {
             bool res = false;
             string responsebody = string.Empty;
@@ -338,6 +338,7 @@ namespace OasCommonLib.WebService
             nvc.Add(WebStringConstants.TZ, tz);
             nvc.Add(WebStringConstants.PROOF, proof);
             nvc.Add("filename", fileName);
+            nvc.Add("user_id", userId.ToString());
             if (dbReference > 0)
             {
                 nvc.Add(WebStringConstants.DB_REFERENCE, dbReference.ToString());
@@ -1115,12 +1116,12 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool UploadAudio(long envelopeId, string fullPath, string tz, string proof, out long uploadedId)
+        public static bool UploadAudio(long envelopeId, string fullPath, string tz, string proof, long userId, out long uploadedId)
         {
             uploadedId = 0L;
             long uId;
 
-            bool res = WebServiceCall.UploadFile(envelopeId, 0, fullPath, InfoTypeEnum.AudioNote, tz, proof, out uId);
+            bool res = WebServiceCall.UploadFile(envelopeId, 0, fullPath, InfoTypeEnum.AudioNote, tz, proof, userId, out uId);
 
             if (res)
             {
@@ -1221,7 +1222,8 @@ namespace OasCommonLib.WebService
                         FileName = d["file_name"].Value<string>(),
                         Updated = updated,
                         TZ = d["tz"].Value<string>(),
-                        ProofStamp = d["proof"].Value<string>()
+                        ProofStamp = d["proof"].Value<string>(),
+                        UserId = d["user_id"].Value<long>(),
                     });
                 }
 

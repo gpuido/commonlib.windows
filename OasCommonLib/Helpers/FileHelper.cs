@@ -260,6 +260,22 @@
             return res;
         }
 
+        public static bool FileLocked(string fileName)
+        {
+            try
+            {
+                using (Stream stream = new FileStream(fileName, FileMode.Open))
+                {
+                }
+            }
+            catch
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public static long Length(string fileName)
         {
             FileInfo fi = new FileInfo(fileName);

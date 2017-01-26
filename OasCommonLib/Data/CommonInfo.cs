@@ -17,6 +17,8 @@
         public string ProofStamp { get; set; }
         public string TZ { get; set; }
 
+        public long UserId { get; set; }
+
         private static long _uniqueId = -1;
         public static long UniqueId
         {
@@ -34,6 +36,7 @@
             Note = string.Empty;
             Updated = DateTime.UtcNow;
             FileMissing = false;
+            UserId = 0L;
 
             TZ = TimeZoneInfo.Local.StandardName;
         }
@@ -56,7 +59,7 @@
 
         public override string ToString()
         {
-            return String.Format("id:{0}, image:{1}, note:{2}, updated:{3}, tz:{4}, proof:{5}", Id, FileName, Note, Updated, TZ, ProofStamp);
+            return String.Format("id:{0}, image:{1}, note:{2}, updated:{3}, tz:{4}, proof:{5}, user_id:{6}", Id, FileName, Note, Updated, TZ, ProofStamp, UserId);
         }
 
         public string ToJson()
@@ -111,6 +114,8 @@
                 {
                     ci.FileMissing = ai["is_file_missing"].Value<bool>();
                 }
+
+                ci.UserId = ai["user_id"].Value<long>();
             }
             catch (Exception ex)
             {

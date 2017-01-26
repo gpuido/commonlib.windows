@@ -285,6 +285,9 @@ namespace OasCommonLib.Config
         // run export for every single page added to case
         public bool AutoExport { get; set; }
 
+        // write comments over exported images
+        public bool BurnText { get; set; }
+
         // Miximize window to kiosk mode
         public bool MaximizeToKiosk { get; set; }
 
@@ -605,6 +608,12 @@ namespace OasCommonLib.Config
                 ocd.AutoExport = jt.Value<bool>();
             }
 
+            jt = o["BurnText"];
+            if (null != jt)
+            {
+                ocd.BurnText = jt.Value<bool>();
+            }
+
             jt = o["MaximizeToKiosk"];
             if (null != jt)
             {
@@ -714,6 +723,7 @@ namespace OasCommonLib.Config
 
             Data.AutoLogin = true;
             Data.AutoExport = true;
+            Data.BurnText = false;
 
             Data.StandardDescription = new string[] { "Dirt in paint", "Scratches", "Dents", "Sand marks", "Bug damage", "Damaged", "Missing", "Chips", "Color" };
 
@@ -1168,6 +1178,18 @@ namespace OasCommonLib.Config
             }
         }
 
+        public bool BurnText
+        {
+            get
+            {
+                return Data.BurnText;
+            }
+            set
+            {
+                Data.BurnText = value;
+            }
+        }
+        
         public bool AutoExport
         {
             get
