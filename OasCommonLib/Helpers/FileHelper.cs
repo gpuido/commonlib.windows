@@ -260,6 +260,8 @@
             return res;
         }
 
+        const int ERROR_SHARING_VIOLATION = 32;
+        const int ERROR_LOCK_VIOLATION = 33;
         public static bool FileLocked(string fileName)
         {
             try
@@ -268,9 +270,10 @@
                 {
                 }
             }
-            catch
+            catch(Exception ex)
             {
-                return true;
+                int errorCode = Marshal.GetHRForException(ex) & ((1 << 16) - 1);
+                return errorCode == ERROR_SHARING_VIOLATION || errorCode == ERROR_LOCK_VIOLATION;
             }
 
             return false;
