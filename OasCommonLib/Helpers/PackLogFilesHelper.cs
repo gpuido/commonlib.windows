@@ -109,6 +109,11 @@
             string[] parts = fileName.Split('-');
             if (3 == parts.Length)
             {
+                if (parts[0].StartsWith("updater"))
+                {
+                    parts[0] = parts[0].Replace("updater", String.Empty);
+                }
+
                 if (!int.TryParse(parts[0], out year))
                 {
                     throw new Exception(String.Format("wrong year in name : '{0}'", fileName));

@@ -24,7 +24,7 @@
 
         public static bool CopyFileEx(string source, string destination, bool replace)
         {
-//            if (!_cfg.IsAdmin)
+            //            if (!_cfg.IsAdmin)
             {
                 return Copy(source, destination, replace);
             }
@@ -183,17 +183,13 @@
 
             try
             {
-                using (var inputFile = new FileStream(
-                     from,
-                     FileMode.Open,
-                     FileAccess.Read,
-                     FileShare.ReadWrite))
+                using (var inputFile = new FileStream(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
                     if (File.Exists(to))
                     {
                         if (!replace)
                         {
-                            LastError = string.Format("file '{0}' already exists", to);
+                            LastError = String.Format("file '{0}' already exists", to);
                             return result;
                         }
                         else
@@ -213,7 +209,7 @@
             }
             catch (Exception ex)
             {
-                LastError = string.Format("file move failed : {0}", ex.Message);
+                LastError = String.Format("file move failed : {0}", ex.Message);
                 result = false;
             }
 
@@ -270,7 +266,7 @@
                 {
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 int errorCode = Marshal.GetHRForException(ex) & ((1 << 16) - 1);
                 return errorCode == ERROR_SHARING_VIOLATION || errorCode == ERROR_LOCK_VIOLATION;

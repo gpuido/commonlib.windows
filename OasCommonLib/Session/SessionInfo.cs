@@ -36,6 +36,7 @@
         public string UserLogin { get; private set; }
         public string[] Roles { get; private set; }
         public long InsuranceGroupId { get; private set; }
+        public string Pin { get; private set; }
 
         public string CompanyRole { get; private set; }
         public string AuthKey { get; private set; }
@@ -70,7 +71,7 @@
                 {
                     if (saveSession)
                     {
-                        if (!SetSessionInfo(login, session, json))
+                        if (!SetSessionInfo(session, json))
                         {
                             return result;
                         }
@@ -91,7 +92,7 @@
             return result;
         }
 
-        public static SessionInfo Parse(string login, string session, string json)
+        public static SessionInfo Parse(string session, string json)
         {
             SessionInfo si = new SessionInfo();
             JObject jObj = JObject.Parse(json);
@@ -99,6 +100,7 @@
 
             string[] roles = result["roles"].Value<string>().Split(',');
 
+            string userLogin = result["user_login"].Value<string>();
             int companyId = result["company_id"].Value<int>();
             string companyName = result["company_name"].Value<string>();
             string companyAbbr = result["company_abbr"].Value<string>();
@@ -106,21 +108,22 @@
             string userName = result["user_name"].Value<string>();
             string companyRole = result["company_role"].Value<string>();
             long insGrpId = result["ins_grp_id"].Value<long>();
+            string pin = result["pin"].Value<string>();
 
-            si.SetSessionInfo(session, companyId, companyName, companyAbbr, userId, userName, login, roles, companyRole, insGrpId);
+            si.SetSessionInfo(session, userLogin, companyId, companyName, companyAbbr, userId, userName, roles, companyRole, insGrpId, pin);
 
             return si;
         }
 
 
-        public bool SetSessionInfo(string login, string session, string json)
+        public bool SetSessionInfo(string session, string json)
         {
             bool res = false;
 
             try
             {
-                var si = Parse(login, session, json);
-                SetSessionInfo(session, si.CompanyId, si.CompanyName, si.CompanyAbbr, si.UserId, si.UserName, si.UserLogin, si.Roles, si.CompanyRole, si.InsuranceGroupId);
+                var si = Parse(session, json);
+                SetSessionInfo(session, si.UserLogin, si.CompanyId, si.CompanyName, si.CompanyAbbr, si.UserId, si.UserName, si.Roles, si.CompanyRole, si.InsuranceGroupId, si.Pin);
 
                 res = true;
             }
@@ -132,18 +135,19 @@
             return res;
         }
 
-        public void SetSessionInfo(string sessionId, int companyId, string companyName, string companyAbbr, int userId, string userName, string login, string[] roles, string companyRole, long insGrpId)
+        public void SetSessionInfo(string sessionId, string userLogin, int companyId, string companyName, string companyAbbr, int userId, string userName, string[] roles, string companyRole, long insGrpId, string pin)
         {
+            UserLogin = userLogin;
             SessionId = sessionId;
             UserId = userId;
             UserName = userName;
             CompanyId = companyId;
             CompanyName = companyName;
             CompanyAbbr = companyAbbr;
-            UserLogin = login;
             Roles = roles;
             CompanyRole = companyRole;
             InsuranceGroupId = insGrpId;
+            Pin = pin;
         }
     }
 }

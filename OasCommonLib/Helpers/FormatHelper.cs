@@ -6,6 +6,7 @@
     public class FormatHelper
     {
         public readonly static string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        public readonly static string LogDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
         public readonly static string DateFormat = "yyyy-MM-dd";
         public readonly static string TimeFormat = "HH:mm";
         public readonly static string DateTimeImageFormat = "MMM/dd/yyyy HH:mm:ss";

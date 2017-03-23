@@ -449,6 +449,79 @@ namespace OasCommonLib.WebService
         }
         #endregion
 
+        public static bool LoginByPin(long companyId, string pin, out string session, out string json)
+        {
+            bool result = false;
+            string responsebody = string.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+
+            json = string.Empty;
+            session = string.Empty;
+
+            if (false && !_cfg.EncodeTraffic)
+            {
+                reqparm.Add(WebStringConstants.ACTION, "login_by_pin");
+                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+                reqparm.Add("pin", pin);
+                reqparm.Add(WebStringConstants.COMPANY_ID, companyId.ToString());
+            }
+            else
+            {
+                string data = ActionParametersHelper.GenerateParameters("login_by_pin", ClientInfo, new List<KeyValuePair<string, object>>()
+                {
+                    new KeyValuePair<string, object>("pin", pin),
+                    new KeyValuePair<string, object>(WebStringConstants.COMPANY_ID, companyId)
+                });
+                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
+            }
+
+            try
+            {
+                using (WebClientEx client = new WebClientEx(cookies))
+                {
+                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
+                    responsebody = Encoding.UTF8.GetString(responsebytes);
+                }
+
+                var cookie = cookies.List().FirstOrDefault((it) => it.Name.Equals(WebStringConstants.SESSION));
+                CookieDomain = cookie.Domain;
+                session = cookie.Value;
+            }
+            catch (WebException ex)
+            {
+                LastError = "login failed.error : " + ex.Message;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LastError = "login failed.error : " + ex.Message;
+                return result;
+            }
+
+            JObject jObj = JObject.Parse(responsebody);
+
+            if (null != jObj[WebStringConstants.ENC_DATA])
+            {
+                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
+                responsebody = CoderHelper.Decode(encodedResponse);
+
+                jObj = JObject.Parse(responsebody);
+            }
+
+            if (null != jObj[JsonStringConstants.ERROR])
+            {
+                LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+            }
+            if (null != jObj[JsonStringConstants.RESULT])
+            {
+                json = responsebody;
+                result = true;
+            }
+
+            return result;
+        }
+
         public static bool Login(string login, string passwd, out string session, out string json)
         {
             bool result = false;
@@ -459,7 +532,7 @@ namespace OasCommonLib.WebService
             json = string.Empty;
             session = string.Empty;
 
-            if (!_cfg.EncodeTraffic)
+            if (false && !_cfg.EncodeTraffic)
             {
                 reqparm.Add(WebStringConstants.ACTION, "login");
                 reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
