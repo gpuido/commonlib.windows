@@ -26,14 +26,11 @@ namespace OasCommonLib.Data
             UserId = ci.UserId;
         }
 
-        public CommonAdditionalInfo() : base()
-        {
+        public CommonAdditionalInfo() : base() { }
 
-        }
-
-        public static CommonAdditionalInfo Parse(JToken j)
+        public static new CommonAdditionalInfo Parse(JToken j)
         {
-            CommonAdditionalInfo cai = new CommonAdditionalInfo();
+            var cai = new CommonAdditionalInfo();
 
             try
             {

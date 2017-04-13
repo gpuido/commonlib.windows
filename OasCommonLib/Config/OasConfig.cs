@@ -163,7 +163,7 @@ namespace OasCommonLib.Config
 #else
             Url = @"http://estvis.com/cgi-bin/oaservice.cgi";
 #endif
-            LoginInfo = string.Empty;
+            LoginInfo = String.Empty;
         }
 
         public void ExtractData(JToken webConfig)

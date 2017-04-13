@@ -16,7 +16,7 @@
         }
         public VinInfo Parse(string json)
         {
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             try
             {

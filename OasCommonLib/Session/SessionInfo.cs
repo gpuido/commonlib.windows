@@ -47,11 +47,11 @@
 
         public SessionInfo()
         {
-            SessionId = string.Empty;
+            SessionId = String.Empty;
             UserId = 0;
-            UserName = string.Empty;
-            CompanyName = string.Empty;
-            UserLogin = string.Empty;
+            UserName = String.Empty;
+            CompanyName = String.Empty;
+            UserLogin = String.Empty;
             Roles = new string[] { };
             HasConnection = false;
         }
@@ -60,7 +60,7 @@
         {
             bool result = false;
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             try
             {

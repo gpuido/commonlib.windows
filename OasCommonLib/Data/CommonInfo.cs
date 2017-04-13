@@ -4,7 +4,6 @@
     using System;
     using Newtonsoft.Json.Linq;
     using System.Diagnostics;
-    using System.Text;
     using Newtonsoft.Json;
 
     public class CommonInfo
@@ -33,7 +32,7 @@
         public CommonInfo()
         {
             Id = UniqueId;
-            Note = string.Empty;
+            Note = String.Empty;
             Updated = DateTime.UtcNow;
             FileMissing = false;
             UserId = 0L;
@@ -46,7 +45,7 @@
             string src = ImageHelper.CaseImagePath(envelopeId, ai.FileName);
             string dst = ImageHelper.ImagePath(ai.FileName);
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             if (!FileHelper.Copy(src, dst, true) || !FileHelper.DeleteFile(src))
             {
@@ -75,7 +74,7 @@
 
         public static CommonInfo Parse(JToken ai)
         {
-            CommonInfo ci = new CommonInfo();
+            var ci = new CommonInfo();
 
             try
             {

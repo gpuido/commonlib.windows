@@ -40,7 +40,7 @@
             if (isDir)
             {
                 Folder = fullFileName;
-                FileName = string.Empty;
+                FileName = String.Empty;
             }
             else
             {

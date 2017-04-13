@@ -40,7 +40,7 @@ namespace OasCommonLib.WebService
 
             Dictionary<string, object> postParameters = new Dictionary<string, object>();
             serverInfo = new ServerInfo();
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             if (!_cfg.EncodeTraffic)
             {
@@ -138,19 +138,25 @@ namespace OasCommonLib.WebService
             return result;
         }
 
-        public static bool UploadFileInfo(long envelopeId, long reference, string pathToFile, InfoTypeEnum infoType, CommonInfo ci, out long uploadedId)
+        public static bool UploadFileInfo(CommonAdditionalInfo cai)
+        {
+            return UploadFileInfo(cai, out long id);
+        }
+
+        public static bool UploadFileInfo(CommonAdditionalInfo cai, out long uploadedId)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
             int uploadedSize = 0;
-            string fileName = Path.GetFileName(pathToFile);
 
-            Debug.Assert(envelopeId > 0);
+            var pathToFile = InfoTypeEnum.AudioNote == cai.InfoType ? ImageHelper.CaseAudioPath(cai.EnvelopeId, cai.FileName) : ImageHelper.CaseImagePath(cai.EnvelopeId, cai.FileName);
 
-            LastError = string.Empty;
+            Debug.Assert(cai.EnvelopeId > 0);
+
+            LastError = String.Empty;
             uploadedId = 0L;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -166,15 +172,16 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-            var nvc = new NameValueCollection();
-            nvc.Add(WebStringConstants.ACTION, "upload_file_info");
-            nvc.Add(WebStringConstants.CLIENT, ClientInfo);
-            nvc.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
-            nvc.Add("reference", reference.ToString());
-            nvc.Add("info_type", ((int)infoType).ToString());
-            nvc.Add("ci", ci.ToJson());
-            nvc.Add("filename", fileName);
-
+            var nvc = new NameValueCollection
+            {
+                { WebStringConstants.ACTION, "upload_file_info" },
+                { WebStringConstants.CLIENT, ClientInfo },
+                { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
+                { "reference", cai.Reference.ToString() },
+                { "info_type", ((int)cai.InfoType).ToString() },
+                { "ci", cai.ToJson() },
+                { "filename", cai.FileName }
+            };
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
             byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
@@ -192,22 +199,40 @@ namespace OasCommonLib.WebService
             cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             request.CookieContainer.Add(cc);
 
-            using (Stream rs = request.GetRequestStream())
+#if DEBUG
+            DateTime start = DateTime.Now;
+            long totalBytes = 0L;
+#endif
+            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), 8192))
+            //            using (Stream rs = request.GetRequestStream())
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
                 {
                     rs.Write(boundarybytes, 0, boundarybytes.Length);
+#if DEBUG
+                    totalBytes += boundarybytes.Length;
+#endif
+
                     string formitem = string.Format(formdataTemplate, key, nvc[key]);
                     byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
                     rs.Write(formitembytes, 0, formitembytes.Length);
+#if DEBUG
+                    totalBytes += formitembytes.Length;
+#endif
                 }
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
+#if DEBUG
+                totalBytes += boundarybytes.Length;
+#endif
 
                 string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "file", fileName, "application/octet-stream");
+                string header = string.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
+#if DEBUG
+                totalBytes += headerbytes.Length;
+#endif
                 using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
                 {
                     byte[] buffer = new byte[8192];
@@ -215,14 +240,25 @@ namespace OasCommonLib.WebService
                     while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
                     {
                         rs.Write(buffer, 0, bytesRead);
+#if DEBUG
+                        totalBytes += bytesRead;
+#endif
                     }
                     fileStream.Close();
                 }
                 byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
                 rs.Write(trailer, 0, trailer.Length);
+#if DEBUG
+                totalBytes += trailer.Length;
+#endif
                 rs.Close();
             }
+#if DEBUG
+            DateTime end = DateTime.Now;
+            var time = end - start;
 
+            Debug.WriteLine(String.Format("written {0} bytes in {1} sec : {2} b/s", totalBytes, time.Seconds, time.Seconds > 0 ? totalBytes / time.Seconds : 0));
+#endif
             try
             {
                 using (WebResponse wresp = request.GetResponse())
@@ -279,24 +315,163 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        #region images
-        public static bool UploadFile(long envelopeId, long dbReference, string pathToFile, InfoTypeEnum infoType, string tz, string proof, long userId, out long uploadedId)
+        public static bool UploadCommonAdditionalInfo(CommonAdditionalInfo cai, out long uploadedId)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
+            NameValueCollection reqparm = new NameValueCollection();
+            CookieContainer cookies = new CookieContainer();
+            CookieCollection cc = new CookieCollection();
+
+            Debug.Assert(cai.EnvelopeId > 0);
+
+            LastError = String.Empty;
+            uploadedId = 0L;
+
+            SessionInfo sessionInfo = SessionInfo.Instance;
+            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+            {
+                LastError = "no session info found in 'upload_file_info'";
+                return res;
+            }
+
+            var nvc = new NameValueCollection
+            {
+                { WebStringConstants.ACTION, "upload_add_info" },
+                { WebStringConstants.CLIENT, ClientInfo },
+                { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
+                { "reference", cai.Reference.ToString() },
+                { "info_type", ((int)cai.InfoType).ToString() },
+                { "ci", cai.ToJson() }
+            };
+            string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
+            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
+            request.ContentType = "multipart/form-data; boundary=" + boundary;
+            request.Method = WebStringConstants.POST;
+            request.KeepAlive = true;
+            request.Credentials = CredentialCache.DefaultCredentials;
+
+            if (request.CookieContainer == null)
+            {
+                request.CookieContainer = new CookieContainer();
+            }
+
+            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
+            request.CookieContainer.Add(cc);
+
+#if DEBUG
+            DateTime start = DateTime.Now;
+            long totalBytes = 0L;
+#endif
+            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), 8192))
+            //            using (Stream rs = request.GetRequestStream())
+            {
+                string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
+                foreach (string key in nvc.Keys)
+                {
+                    rs.Write(boundarybytes, 0, boundarybytes.Length);
+#if DEBUG
+                    totalBytes += boundarybytes.Length;
+#endif
+
+                    string formitem = string.Format(formdataTemplate, key, nvc[key]);
+                    byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
+                    rs.Write(formitembytes, 0, formitembytes.Length);
+#if DEBUG
+                    totalBytes += formitembytes.Length;
+#endif
+                }
+                rs.Write(boundarybytes, 0, boundarybytes.Length);
+#if DEBUG
+                totalBytes += boundarybytes.Length;
+#endif
+
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                rs.Write(trailer, 0, trailer.Length);
+#if DEBUG
+                totalBytes += trailer.Length;
+#endif
+                rs.Close();
+            }
+#if DEBUG
+            DateTime end = DateTime.Now;
+            var time = end - start;
+
+            Debug.WriteLine(String.Format("written {0} bytes in {1} sec : {2} b/s", totalBytes, time.Seconds, time.Seconds > 0 ? totalBytes / time.Seconds : 0));
+#endif
+            try
+            {
+                using (WebResponse wresp = request.GetResponse())
+                {
+                    using (Stream stream2 = wresp.GetResponseStream())
+                    {
+                        using (StreamReader reader2 = new StreamReader(stream2))
+                        {
+                            responsebody = reader2.ReadToEnd();
+                            reader2.Close();
+                        }
+                        stream2.Close();
+                    }
+                    wresp.Close();
+                }
+
+                JObject jObj = JObject.Parse(responsebody);
+
+                if (null != jObj[JsonStringConstants.ERROR])
+                {
+                    LastError = jObj[JsonStringConstants.ERROR].Value<string>();
+                    return res;
+                }
+                if (null != jObj[JsonStringConstants.RESULT])
+                {
+                    var result = jObj[JsonStringConstants.RESULT];
+
+                    var uId = result["uploaded_id"];
+                    if (null != uId)
+                    {
+                        uploadedId = uId.Value<long>();
+                    }
+
+                    res = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!ex.Message.Contains("timed out"))
+                {
+                    Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+                }
+                LastError = "upload_file_info failed :" + ex.Message;
+            }
+
+            return res;
+        }
+
+        #region images
+        public static bool UploadFile(CommonAdditionalInfo cai)
+        {
+            return UploadFile(cai, out long uploadedId);
+        }
+
+        public static bool UploadFile(CommonAdditionalInfo cai, out long uploadedId)
+        {
+            bool res = false;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
             int uploadedSize = 0;
             string uploadType = "upload_image";
-            string fileName = Path.GetFileName(pathToFile);
+            var pathToFile = InfoTypeEnum.AudioNote == cai.InfoType ? ImageHelper.CaseAudioPath(cai.EnvelopeId, cai.FileName) : ImageHelper.CaseImagePath(cai.EnvelopeId, cai.FileName);
 
-            Debug.Assert(envelopeId > 0);
+            Debug.Assert(cai.EnvelopeId > 0);
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             uploadedId = 0L;
 
-            switch (infoType)
+            switch (cai.InfoType)
             {
                 case InfoTypeEnum.DetailAddInfo:
                     uploadType = "upload_image";
@@ -306,11 +481,11 @@ namespace OasCommonLib.WebService
                     break;
                 case InfoTypeEnum.Supplement:
                     uploadType = "upload_suppliment";
-                    dbReference = 0L;
+                    cai.Reference = 0L;
                     break;
                 case InfoTypeEnum.AudioNote:
                     uploadType = "upload_audio";
-                    dbReference = 0L;
+                    cai.Reference = 0L;
                     break;
                 default:
                     Debug.Fail("unsupported upload type");
@@ -331,18 +506,17 @@ namespace OasCommonLib.WebService
                 return res;
             }
 
-            var nvc = new NameValueCollection();
-            nvc.Add(WebStringConstants.ACTION, uploadType);
-            nvc.Add(WebStringConstants.CLIENT, ClientInfo);
-            nvc.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
-            nvc.Add(WebStringConstants.TZ, tz);
-            nvc.Add(WebStringConstants.PROOF, proof);
-            nvc.Add("filename", fileName);
-            nvc.Add("user_id", userId.ToString());
-            if (dbReference > 0)
+            var nvc = new NameValueCollection
             {
-                nvc.Add(WebStringConstants.DB_REFERENCE, dbReference.ToString());
-            }
+                { WebStringConstants.ACTION, uploadType },
+                { WebStringConstants.CLIENT, ClientInfo },
+                { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
+                { WebStringConstants.TZ, cai.TZ },
+                { WebStringConstants.PROOF, cai.ProofStamp },
+                { "filename", cai.FileName },
+                { "user_id", cai.UserId.ToString() },
+                { WebStringConstants.DB_REFERENCE, cai.Reference.ToString()}
+        };
 
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
             byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
@@ -361,7 +535,7 @@ namespace OasCommonLib.WebService
             cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             request.CookieContainer.Add(cc);
 
-            using (Stream rs = request.GetRequestStream())
+            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), 8192))
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
@@ -374,7 +548,7 @@ namespace OasCommonLib.WebService
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
 
                 string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "file", fileName, "application/octet-stream");
+                string header = string.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
@@ -452,12 +626,12 @@ namespace OasCommonLib.WebService
         public static bool LoginByPin(long companyId, string pin, out string session, out string json)
         {
             bool result = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
 
-            json = string.Empty;
-            session = string.Empty;
+            json = String.Empty;
+            session = String.Empty;
 
             if (false && !_cfg.EncodeTraffic)
             {
@@ -525,12 +699,12 @@ namespace OasCommonLib.WebService
         public static bool Login(string login, string passwd, out string session, out string json)
         {
             bool result = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
 
-            json = string.Empty;
-            session = string.Empty;
+            json = String.Empty;
+            session = String.Empty;
 
             if (false && !_cfg.EncodeTraffic)
             {
@@ -599,12 +773,12 @@ namespace OasCommonLib.WebService
         public static bool EdmundsVinInfo(string vin, out VinInfo vinInfo)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             string url = "http://api.edmunds.com/v1/api/toolsrepository/vindecoder?vin={0}&fmt=json&api_key={1}";
             string edmundsApiKey = "cbaqfbt2kvb2xpcjwsv99h3q";
             string getUrl = string.Format(url, vin, edmundsApiKey);
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             vinInfo = null;
 
             try
@@ -635,11 +809,11 @@ namespace OasCommonLib.WebService
         public static bool NHTSAVinInfo(string vin, out VinInfo vinInfo)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             string url = "http://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{0}?format=json";
             string getUrl = string.Format(url, vin);
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             vinInfo = null;
 
             try
@@ -670,12 +844,12 @@ namespace OasCommonLib.WebService
         public static bool OasVinInfo(string vin, out VinInfo vinInfo)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             vinInfo = null;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -742,12 +916,12 @@ namespace OasCommonLib.WebService
         public static bool SaveVinInfo(VinInfo vinInfo)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -824,12 +998,12 @@ namespace OasCommonLib.WebService
         public static bool UpdateCaseInfo(VinInfo vinInfo)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -902,12 +1076,12 @@ namespace OasCommonLib.WebService
         public static bool ReadVinInfo(string vin, out VinInfo vinInfo)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             vinInfo = null;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -968,13 +1142,13 @@ namespace OasCommonLib.WebService
                 if (null != jObj[JsonStringConstants.RESULT])
                 {
                     var result = jObj[JsonStringConstants.RESULT];
-
-                    VinInfo vi = new VinInfo();
-                    vi.Vin = vin;
-                    vi.Make = result["make"].Value<string>();
-                    vi.Model = result["model"].Value<string>();
-                    vi.Year = result["year"].Value<int>();
-
+                    var vi = new VinInfo()
+                    {
+                        Vin = vin,
+                        Make = result["make"].Value<string>(),
+                        Model = result["model"].Value<string>(),
+                        Year = result["year"].Value<int>()
+                    };
                     vinInfo = vi;
                     res = true;
                 }
@@ -1047,7 +1221,7 @@ namespace OasCommonLib.WebService
                 DataServiceUrl += "/";
             }
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             string requestParameters;
             if (reference > 0L)
             {
@@ -1079,7 +1253,7 @@ namespace OasCommonLib.WebService
                 {
                     stage = 2;
                     string text = File.ReadAllText(pathToImage);
-                    string error = string.Empty;
+                    string error = String.Empty;
                     if (!string.IsNullOrEmpty(text))
                     {
                         JObject jObj = JObject.Parse(text);
@@ -1108,12 +1282,12 @@ namespace OasCommonLib.WebService
             catch (JsonException jre)
             {
                 LastError = jre.Message + Environment.NewLine + jre.StackTrace + Environment.NewLine + "stage: " + stage;
-//                Debug.Fail(LastError);
+                //                Debug.Fail(LastError);
             }
             catch (Exception ex)
             {
                 LastError = String.Format("file '{0}' download error :{1}, stage: {2}", downloadUrl, ex.Message, stage);
-//                Debug.Fail(LastError);
+                //                Debug.Fail(LastError);
             }
             return res;
         }
@@ -1133,7 +1307,7 @@ namespace OasCommonLib.WebService
                 DataServiceUrl += "/";
             }
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             string requestParameters = "da/" + envelopeId.ToString() + "/" + audioName;
 
             if (!_cfg.EncodeTraffic)
@@ -1189,16 +1363,19 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool UploadAudio(long envelopeId, string fullPath, string tz, string proof, long userId, out long uploadedId)
+        public static bool UploadAudio(CommonAdditionalInfo cai, out long uploadedId)
         {
             uploadedId = 0L;
-            long uId;
 
-            bool res = WebServiceCall.UploadFile(envelopeId, 0, fullPath, InfoTypeEnum.AudioNote, tz, proof, userId, out uId);
+            bool res = WebServiceCall.UploadFile(cai, out long uId);
 
             if (res)
             {
                 uploadedId = uId;
+            }
+            else
+            {
+                LastError = WebServiceCall.LastError;
             }
 
             return res;
@@ -1207,13 +1384,13 @@ namespace OasCommonLib.WebService
         public static bool ReadAudioNotes(long envelopeId, out IList<CommonInfo> anList)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
             anList = null;
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1309,13 +1486,13 @@ namespace OasCommonLib.WebService
         public static bool RemoveCommonAdditionalInfo(CommonAdditionalInfo cai)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
             int deletedId = 0;
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1393,12 +1570,12 @@ namespace OasCommonLib.WebService
         public static bool ReadMissingFiles(long envelopeId, out List<CommonUploadInfo> missingInfoList)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = string.Empty;
+            LastError = String.Empty;
             missingInfoList = new List<CommonUploadInfo>();
 
             SessionInfo sessionInfo = SessionInfo.Instance;
@@ -1487,7 +1664,7 @@ namespace OasCommonLib.WebService
         public static bool ReadConfig(out List<AdditionalActivity> cfgAddActivities, out List<OperationCode> cfgOperCodes, out List<PreconditionInfo> cfgPreconds, out List<AddInfoTypeInfo> aitList, out List<InsuranceGroupInfo> insList)
         {
             bool res = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
@@ -1497,7 +1674,7 @@ namespace OasCommonLib.WebService
             cfgPreconds = new List<PreconditionInfo>();
             aitList = new List<AddInfoTypeInfo>();
             insList = new List<InsuranceGroupInfo>();
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1628,12 +1805,12 @@ namespace OasCommonLib.WebService
         public static bool SendErrorReport(Exception ex, string appName)
         {
             bool result = false;
-            string responsebody = string.Empty;
+            string responsebody = String.Empty;
             NameValueCollection reqparm = new NameValueCollection();
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -1692,13 +1869,12 @@ namespace OasCommonLib.WebService
 
             foreach (var key in table.Keys)
             {
-
-                Uri uri = null;
-
                 var domain = key as string;
 
-                if (domain == null)
+                if (null == domain)
+                {
                     continue;
+                }
 
                 if (domain.StartsWith("."))
                 {
@@ -1707,7 +1883,7 @@ namespace OasCommonLib.WebService
 
                 var address = string.Format("http://{0}/", domain);
 
-                if (Uri.TryCreate(address, UriKind.RelativeOrAbsolute, out uri) == false)
+                if (Uri.TryCreate(address, UriKind.RelativeOrAbsolute, out Uri uri) == false)
                     continue;
 
                 foreach (Cookie cookie in container.GetCookies(uri))

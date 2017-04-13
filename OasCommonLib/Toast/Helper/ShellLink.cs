@@ -458,7 +458,7 @@
                 {
                     VerifySucceeded(this.PropertyStore.GetValue(argumentsKey, pv));
 
-                    return (pv.Value as string) ?? string.Empty;
+                    return (pv.Value as string) ?? String.Empty;
                 }
             }
             set { VerifySucceeded(this.shellLink.SetArguments(value)); }
@@ -588,12 +588,12 @@
                 {
                     VerifySucceeded(this.PropertyStore.GetValue(appUserModelIDKey, pv));
 
-                    return (pv.Value as string) ?? string.Empty;
+                    return (pv.Value as string) ?? String.Empty;
                 }
             }
             set
             {
-                var buff = value ?? string.Empty;
+                var buff = value ?? String.Empty;
                 if (128 < buff.Length)
                     throw new ArgumentException("AppUserModelID is too long.", nameof(AppUserModelID));
 

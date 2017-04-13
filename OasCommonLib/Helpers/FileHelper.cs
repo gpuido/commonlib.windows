@@ -77,7 +77,7 @@
         {
             bool result = false;
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             try
             {
@@ -179,7 +179,7 @@
         {
             bool result = false;
 
-            LastError = string.Empty;
+            LastError = String.Empty;
 
             try
             {

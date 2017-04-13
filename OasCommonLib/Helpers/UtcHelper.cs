@@ -43,7 +43,7 @@
         public static string UtcToLocal(DateTime utc, string tz, string format)
         {
             string[] letters = tz.Split(' ');
-            string timeZone = string.Empty;
+            string timeZone = String.Empty;
             DateTime dt = UtcToLocal(utc, tz);
 
             foreach (var l in letters)

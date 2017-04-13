@@ -8,7 +8,6 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Timers;
 
@@ -98,7 +97,7 @@
             _elapseTimerMin = 5;
 
             timer = new Timer(_elapseTimerMin * 60000); // once in a minute
-            timer.Elapsed += timer_Elapsed;
+            timer.Elapsed += Timer_Elapsed;
             timer.Enabled = true;
 
             LogFileName = MakeLogFileName();
@@ -110,6 +109,11 @@
             _startMessage = StartMessage();
         }
 
+        ~LogQueue()
+        {
+            FlushLog();
+        }
+
         public static string MakeLogFileName()
         {
             return DateTime.Now.ToString(FormatHelper.DateFormat) + ".log";
@@ -117,7 +121,7 @@
 
         public void Dispose()
         {
-            timer.Elapsed -= timer_Elapsed;
+            timer.Elapsed -= Timer_Elapsed;
             timer.Enabled = false;
             timer.Dispose();
 
@@ -125,7 +129,7 @@
             Debug.WriteLine("Log was disposed");
         }
 
-        void timer_Elapsed(object sender, ElapsedEventArgs e)
+        void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             FlushLog();
             Debug.WriteLine("Log timer elapsed");
@@ -142,7 +146,7 @@
         {
             if (!string.IsNullOrEmpty(_module) && !string.IsNullOrEmpty(_eventName))
             {
-                var logEvent = new LogItem(_module, Version, _eventName, _eventType, null != ex ? ex.StackTrace : null);
+                var logEvent = new LogItem(_module, Version, _eventName, _eventType, ex?.StackTrace);
                 LastItem = logEvent.ToString();
                 LogItemList.Add(logEvent);
 
@@ -166,7 +170,7 @@
         {
             if (!string.IsNullOrEmpty(_module) && !string.IsNullOrEmpty(_eventName))
             {
-                var logEvent = new LogItem(_module, Version, _eventName, _eventType, null != ex ? ex.StackTrace : null);
+                var logEvent = new LogItem(_module, Version, _eventName, _eventType, ex?.StackTrace);
                 LastItem = logEvent.ToString();
                 LogItemList.Add(logEvent);
 
@@ -185,7 +189,7 @@
         {
             if (!string.IsNullOrEmpty(_module) && null != ex)
             {
-                var logEvent = new LogItem(_module, Version, ex.Message + (string.IsNullOrEmpty(message) ? string.Empty : ", " + message), LogItemType.Error, ex.StackTrace);
+                var logEvent = new LogItem(_module, Version, ex.Message + (String.IsNullOrEmpty(message) ? String.Empty : ", " + message), LogItemType.Error, ex.StackTrace);
                 LastItem = logEvent.ToString();
                 LogItemList.Add(logEvent);
 
@@ -227,8 +231,7 @@
             string fname = MakeLogFileName();
             try
             {
-                LogItem item;
-                List<string> items = new List<string>();
+                var items = new List<string>();
 
                 if (!string.IsNullOrEmpty(_startMessage))
                 {
@@ -238,7 +241,7 @@
 
                 while (!LogItemList.IsEmpty)
                 {
-                    if (LogItemList.TryTake(out item))
+                    if (LogItemList.TryTake(out LogItem item))
                     {
                         items.Add(item.ToString());
                     }

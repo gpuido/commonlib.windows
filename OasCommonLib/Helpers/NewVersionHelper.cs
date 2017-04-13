@@ -36,8 +36,7 @@
             try
             {
                 long currentAppVersion = GetVersion(currentVersion);
-                string serverVersion;
-                var rs = GetServerFileVersion(productName, out serverVersion);
+                var rs = GetServerFileVersion(productName, out string serverVersion);
                 if (!rs)
                 {
                     return false;

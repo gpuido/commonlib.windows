@@ -40,7 +40,7 @@
 
         private static string GetHead(int encodeCharsNumber)
         {
-            string head = string.Empty;
+            string head = String.Empty;
 
             for (int i = 0; i < encodeCharsNumber * 2; ++i)
             {

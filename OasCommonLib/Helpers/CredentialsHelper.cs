@@ -13,8 +13,8 @@
         {
             bool ok = false;
 
-            login = string.Empty;
-            passwd = string.Empty;
+            login = String.Empty;
+            passwd = String.Empty;
 
             LastError = String.Empty;
             if (string.IsNullOrEmpty(credentialInfo))
