@@ -64,10 +64,9 @@
                     var osTypeValue = (ushort)(os?["OSType"] ?? 0);
                     if (osTypeValue == 18) // WINNT
                     {
-                        var versionValue = os?["Version"] as string;
-                        if (versionValue != null)
-                            return new Version(versionValue);
-                    }
+                    if (os?["Version"] is string versionValue)
+                        return new Version(versionValue);
+                }
 
                     return null;
                 }

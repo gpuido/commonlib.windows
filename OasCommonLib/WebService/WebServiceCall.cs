@@ -168,7 +168,7 @@ namespace OasCommonLib.WebService
 
             if (!FileHelper.Exists(pathToFile))
             {
-                LastError = string.Format("file '{0}' doesn't exist", pathToFile);
+                LastError = String.Format("file '{0}' doesn't exist", pathToFile);
                 return res;
             }
 
@@ -214,7 +214,7 @@ namespace OasCommonLib.WebService
                     totalBytes += boundarybytes.Length;
 #endif
 
-                    string formitem = string.Format(formdataTemplate, key, nvc[key]);
+                    string formitem = String.Format(formdataTemplate, key, nvc[key]);
                     byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
                     rs.Write(formitembytes, 0, formitembytes.Length);
 #if DEBUG
@@ -227,7 +227,7 @@ namespace OasCommonLib.WebService
 #endif
 
                 string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
+                string header = String.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
 #if DEBUG
@@ -376,7 +376,7 @@ namespace OasCommonLib.WebService
                     totalBytes += boundarybytes.Length;
 #endif
 
-                    string formitem = string.Format(formdataTemplate, key, nvc[key]);
+                    string formitem = String.Format(formdataTemplate, key, nvc[key]);
                     byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
                     rs.Write(formitembytes, 0, formitembytes.Length);
 #if DEBUG
@@ -502,7 +502,7 @@ namespace OasCommonLib.WebService
 
             if (!FileHelper.Exists(pathToFile))
             {
-                LastError = string.Format("file '{0}' doesn't exist", pathToFile);
+                LastError = String.Format("file '{0}' doesn't exist", pathToFile);
                 return res;
             }
 
@@ -541,14 +541,14 @@ namespace OasCommonLib.WebService
                 foreach (string key in nvc.Keys)
                 {
                     rs.Write(boundarybytes, 0, boundarybytes.Length);
-                    string formitem = string.Format(formdataTemplate, key, nvc[key]);
+                    string formitem = String.Format(formdataTemplate, key, nvc[key]);
                     byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
                     rs.Write(formitembytes, 0, formitembytes.Length);
                 }
                 rs.Write(boundarybytes, 0, boundarybytes.Length);
 
                 string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
+                string header = String.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
                 using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
@@ -776,7 +776,7 @@ namespace OasCommonLib.WebService
             string responsebody = String.Empty;
             string url = "http://api.edmunds.com/v1/api/toolsrepository/vindecoder?vin={0}&fmt=json&api_key={1}";
             string edmundsApiKey = "cbaqfbt2kvb2xpcjwsv99h3q";
-            string getUrl = string.Format(url, vin, edmundsApiKey);
+            string getUrl = String.Format(url, vin, edmundsApiKey);
 
             LastError = String.Empty;
             vinInfo = null;
@@ -811,7 +811,7 @@ namespace OasCommonLib.WebService
             bool res = false;
             string responsebody = String.Empty;
             string url = "http://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{0}?format=json";
-            string getUrl = string.Format(url, vin);
+            string getUrl = String.Format(url, vin);
 
             LastError = String.Empty;
             vinInfo = null;
@@ -1624,13 +1624,13 @@ namespace OasCommonLib.WebService
                     foreach (var ai in addInfo)
                     {
                         var reference = ai["reference"].Value<long>();
-                        var missing = ai[JsonStringConstants.IS_FILE_MISSING].Value<bool>();
+                        var missing = ai[JsonStringConstants.IS_FILE_MISSING].Value<int>() != 0;
                         if (missing)
                         {
                             var fileName = ai[JsonStringConstants.FILE_NAME].Value<string>();
                             long id = ai[JsonStringConstants.ID].Value<long>();
                             InfoTypeEnum type = (InfoTypeEnum)ai["type"].Value<int>();
-                            string msg = string.Format("going to upload detail image db_ref:{0}, image:{1}, id :{2}", reference, fileName, id);
+                            string msg = String.Format("going to upload detail image db_ref:{0}, image:{1}, id :{2}", reference, fileName, id);
 
                             var ci = new CommonUploadInfo()
                             {
@@ -1881,7 +1881,7 @@ namespace OasCommonLib.WebService
                     domain = domain.Substring(1);
                 }
 
-                var address = string.Format("http://{0}/", domain);
+                var address = String.Format("http://{0}/", domain);
 
                 if (Uri.TryCreate(address, UriKind.RelativeOrAbsolute, out Uri uri) == false)
                     continue;

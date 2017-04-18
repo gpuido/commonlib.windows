@@ -11,7 +11,7 @@
         private static readonly Encoding encoding = Encoding.UTF8;
         public static HttpWebResponse MultipartFormDataPost(string postUrl, string userAgent, Dictionary<string, object> postParameters)
         {
-            string formDataBoundary = string.Format("----------{0:N}", Guid.NewGuid());
+            string formDataBoundary = String.Format("----------{0:N}", Guid.NewGuid());
             string contentType = "multipart/form-data; boundary=" + formDataBoundary;
 
             byte[] formData = GetMultipartFormData(postParameters, formDataBoundary);
@@ -64,12 +64,10 @@
 
                     needsCLRF = true;
 
-                    if (param.Value is FileParameter)
+                    if (param.Value is FileParameter fileToUpload)
                     {
-                        FileParameter fileToUpload = (FileParameter)param.Value;
-
                         // Add just the first part of this param, since we will write the file data directly to the Stream
-                        string header = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"; filename=\"{2}\"\r\nContent-Type: {3}\r\n\r\n",
+                        string header = String.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"; filename=\"{2}\"\r\nContent-Type: {3}\r\n\r\n",
                             boundary,
                             param.Key,
                             fileToUpload.FileName ?? param.Key,
@@ -82,7 +80,7 @@
                     }
                     else
                     {
-                        string postData = string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}",
+                        string postData = String.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}",
                             boundary,
                             param.Key,
                             param.Value);

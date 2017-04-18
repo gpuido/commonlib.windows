@@ -70,11 +70,10 @@
             }
 
             long lv = 0;
-            long value;
             var parts = version.Split('.').Reverse();
             for (int i = 0; i < parts.Count(); ++i)
             {
-                if (long.TryParse(parts.ElementAt(i), out value))
+                if (long.TryParse(parts.ElementAt(i), out long value))
                 {
                     lv += value * (long)Math.Pow(1000, i);
                 }

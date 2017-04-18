@@ -179,7 +179,7 @@
 
                     if (!FileHelper.CreateDirectoryRecursively(_downloadPath))
                     {
-                        LastError = string.Format("cannot create temporary directory '{0}' : {1}", _downloadPath, FileHelper.LastError);
+                        LastError = String.Format("cannot create temporary directory '{0}' : {1}", _downloadPath, FileHelper.LastError);
                         return res;
                     }
 
@@ -230,7 +230,7 @@
                 step = 2;
                 if (!FileHelper.CreateDirectoryRecursively(destination))
                 {
-                    LastError = string.Format("cannot create tempotrary directory '{0}': {1}", destination, FileHelper.LastError);
+                    LastError = String.Format("cannot create tempotrary directory '{0}': {1}", destination, FileHelper.LastError);
                     return res;
                 }
 
@@ -273,7 +273,7 @@
             }
             catch (Exception ex)
             {
-                LastError = string.Format("failed to unpack update : '{0}', error : {1}, step : {2}", source, ex.Message, step);
+                LastError = String.Format("failed to unpack update : '{0}', error : {1}, step : {2}", source, ex.Message, step);
             }
 
             return res;

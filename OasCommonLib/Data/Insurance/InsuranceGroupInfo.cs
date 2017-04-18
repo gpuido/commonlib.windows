@@ -23,8 +23,8 @@
                 ins.Id = jt["id"].Value<int>();
                 ins.Index = jt["idx"].Value<string>();
                 ins.Name = jt["name"].Value<string>();
-                ins.Enabled = jt["enabled"].Value<bool>();
-                ins.Default = jt["is_default"].Value<bool>();
+                ins.Enabled = jt["enabled"].Value<int>() != 0;
+                ins.Default = jt["is_default"].Value<int>() != 0;
 
                 if (null != jt["date"])
                 {

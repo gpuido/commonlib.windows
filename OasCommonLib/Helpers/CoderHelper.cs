@@ -29,7 +29,7 @@
 
             encodeHead = GetHead(encodeCharsNumber);
 
-            encodedData = string.Format("{0}{1}{2}{3}",
+            encodedData = String.Format("{0}{1}{2}{3}",
                 ENCODE_SIGN,
                 encodeCharsNumber,
                 encodeHead,
@@ -78,16 +78,14 @@
 
         private static int GetEncodeCharsNumber(string data)
         {
-            int stripLength;
-
             if (data.Length <= 2)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(
+                    String.Format(
                     "string length {0} is too short",
                     data.Length));
             }
-            if (!int.TryParse(data.Substring(1, 1), out stripLength))
+            if (!int.TryParse(data.Substring(1, 1), out int stripLength))
             {
                 throw new Exception("can not parse length");
             }
@@ -101,7 +99,7 @@
             if (data.Length <= stripLength)
             {
                 throw new ArgumentOutOfRangeException(
-                    string.Format(
+                    String.Format(
                     "string length {0} is shorter then index {1}",
                     data.Length, encodeCharsNumber));
             }
@@ -150,7 +148,7 @@
 
             for (int x = 0; x < length; x++)
             {
-                buffer[x] = char2sixbit(source[x]);
+                buffer[x] = Char2sixbit(source[x]);
             }
 
             byte b, b1, b2, b3;
@@ -191,7 +189,7 @@
             return result;
         }
 
-        private byte char2sixbit(char c)
+        private byte Char2sixbit(char c)
         {
             char[] lookupTable = new char[64]
                 {
@@ -289,7 +287,7 @@
 
             for (int x = 0; x < blockCount * 4; x++)
             {
-                result[x] = sixbit2char(buffer[x]);
+                result[x] = Sixbit2char(buffer[x]);
             }
 
             //covert last "A"s to "=", based on paddingCount
@@ -306,7 +304,7 @@
             return result;
         }
 
-        private char sixbit2char(byte b)
+        private char Sixbit2char(byte b)
         {
             char[] lookupTable = new char[64]
                 {  'A','B','C','D','E','F','G','H','I','J','K','L','M',

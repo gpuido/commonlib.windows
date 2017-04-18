@@ -40,12 +40,11 @@
 
                 string[] loglist = Directory.GetFiles(logFolder, "*.log");
                 string todayLogName = DateTime.Now.ToString(FormatHelper.DateFormat) + ".log";
-                YearMonthInfo logYearMonth;
-                Dictionary<string, List<string>> logs = new Dictionary<string, List<string>>();
+                var logs = new Dictionary<string, List<string>>();
 
                 foreach (var ll in loglist)
                 {
-                    if (HowManyDaysFromNow(ll, out logYearMonth) > howManyDaysSaveInArchive)
+                    if (HowManyDaysFromNow(ll, out YearMonthInfo logYearMonth) > howManyDaysSaveInArchive)
                     {
                         if (!logs.ContainsKey(logYearMonth.ToString()))
                         {
@@ -95,7 +94,6 @@
 
         public static int HowManyDaysFromNow(string fileName, out YearMonthInfo logDate)
         {
-            int year, month, day;
             int howManyDaysFromNow = 0;
 
             fileName = Path.GetFileName(fileName.Replace('/', '\\'));
@@ -114,18 +112,18 @@
                     parts[0] = parts[0].Replace("updater", String.Empty);
                 }
 
-                if (!int.TryParse(parts[0], out year))
+                if (!int.TryParse(parts[0], out int year))
                 {
                     throw new Exception(String.Format("wrong year in name : '{0}'", fileName));
                 }
-                if (!int.TryParse(parts[1], out month))
+                if (!int.TryParse(parts[1], out int month))
                 {
                     throw new Exception(String.Format("wrong month in name : '{0}'", fileName));
                 }
 
                 var index = parts[2].IndexOf('.');
                 var tmp = parts[2].Substring(0, index);
-                if (!int.TryParse(tmp, out day))
+                if (!int.TryParse(tmp, out int day))
                 {
                     throw new Exception(String.Format("wrong month in name : '{0}'", fileName));
                 }

@@ -11,7 +11,6 @@
         public static long DateTicks(string fileName)
         {
             long ticks = DateTime.Now.Ticks;
-            int tmp;
             int[] data = new int[] { 0, 0, 0, 0, 0, 0 };
             string[] parts = rgx.Split(fileName);
 
@@ -19,7 +18,7 @@
             {
                 for (int i = 1; i < parts.Length - 1; ++i)
                 {
-                    if (int.TryParse(parts[i], out tmp))
+                    if (int.TryParse(parts[i], out int tmp))
                     {
                         data[i - 1] = tmp;
                     }

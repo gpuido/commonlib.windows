@@ -94,7 +94,7 @@
 
         public LogQueue()
         {
-            _elapseTimerMin = 5;
+            _elapseTimerMin = 1;
 
             timer = new Timer(_elapseTimerMin * 60000); // once in a minute
             timer.Elapsed += Timer_Elapsed;
@@ -260,20 +260,20 @@
             {
                 AddError(TAG,
                     ex,
-                    string.Format("Failed to save log into file '{0}'", fname));
+                    String.Format("Failed to save log into file '{0}'", fname));
             }
         }
 
         private string StartMessage()
         {
-            return string.Format(
+            return String.Format(
                 "version:{0} started @ {1}, on {2}\n server: {3}, local server: {4}",
                 Version,
                 DateTime.Now.ToString(FormatHelper.DateTimeFormat),
                 Environment.MachineName,
                 _cfg.DataServiceUrl,
                 _cfg.StartWebServer ?
-                    string.Format(
+                    String.Format(
                         "url:{0}, port:{1}",
                         String.Join(",", _cfg.Ips.ToArray()),
                         _cfg.WebServerPort

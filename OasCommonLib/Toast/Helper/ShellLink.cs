@@ -410,8 +410,7 @@
         {
             get
             {
-                string buff;
-                this.PersistFile.GetCurFile(out buff);
+                this.PersistFile.GetCurFile(out string buff);
 
                 return buff;
             }
@@ -517,8 +516,7 @@
         {
             get
             {
-                SW showCmd;
-                VerifySucceeded(this.shellLink.GetShowCmd(out showCmd));
+                VerifySucceeded(this.shellLink.GetShowCmd(out SW showCmd));
 
                 return showCmd;
             }
@@ -534,8 +532,7 @@
             get
             {
                 var sb = new StringBuilder(MAX_PATH - 1);
-                int index;
-                VerifySucceeded(this.shellLink.GetIconLocation(sb, sb.Capacity, out index));
+                VerifySucceeded(this.shellLink.GetIconLocation(sb, sb.Capacity, out int index));
 
                 return sb.ToString();
             }
@@ -556,8 +553,7 @@
             get
             {
                 var sb = new StringBuilder(MAX_PATH);
-                int index;
-                VerifySucceeded(this.shellLink.GetIconLocation(sb, sb.Capacity, out index));
+                VerifySucceeded(this.shellLink.GetIconLocation(sb, sb.Capacity, out int index));
 
                 return index;
             }

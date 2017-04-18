@@ -760,7 +760,7 @@ namespace OasCommonLib.Config
 
         private static void SaveError(Exception ex)
         {
-            string error = string.Format("error in oasConfig : '{0}'\nstack : {1}\n", ex.Message, ex.StackTrace);
+            string error = String.Format("error in oasConfig : '{0}'\nstack : {1}\n", ex.Message, ex.StackTrace);
             string fileName = Path.Combine(
 #if DEBUG
             @"..\..\OAS\Logs"
@@ -1450,14 +1450,14 @@ namespace OasCommonLib.Config
                     DriveInfo di = new DriveInfo(path.Substring(0, 3));
                     if (di.DriveType == DriveType.Network && !di.IsReady)
                     {
-                        string error = string.Format("it looks like network path '{0}' is not connected", path);
+                        string error = String.Format("it looks like network path '{0}' is not connected", path);
                         //                        LogQueue.Instance.Add(_moduleName, error, LogItemType.Error);
                     }
                 }
             }
             //if (!DirectoryHelper.NetworkPathAccessable(path))
             //{
-            //    string error = string.Format("it looks like network path '{0}' is not connected", path);
+            //    string error = String.Format("it looks like network path '{0}' is not connected", path);
 
             //    _logQueue.Add(_moduleName, error, LogItemType.Error);
             //    throw new IOException(error);
@@ -1471,13 +1471,13 @@ namespace OasCommonLib.Config
                 }
                 catch (Exception ex)
                 {
-                    var error = string.Format("oasconfig : error during directory creation '{0}'", path);
+                    var error = String.Format("oasconfig : error during directory creation '{0}'", path);
                     Debug.WriteLine(error);
                     SaveError(ex);
                     //LogQueue.Instance.AddError(
                     //    _moduleName,
                     //    ex,
-                    //    string.Format("Error during directory creation '{0}'", path));
+                    //    String.Format("Error during directory creation '{0}'", path));
                 }
             }
         }

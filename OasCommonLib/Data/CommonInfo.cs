@@ -111,7 +111,7 @@
 
                 if (null != ai["is_file_missing"])
                 {
-                    ci.FileMissing = ai["is_file_missing"].Value<bool>();
+                    ci.FileMissing = ai["is_file_missing"].Value<int>() != 0;
                 }
 
                 ci.UserId = ai["user_id"].Value<long>();

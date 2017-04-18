@@ -7,10 +7,8 @@
     {
         public static DateTime GetDateTime(JToken p)
         {
-            DateTime dt;
-
             string tmp = p.Value<string>();
-            DateTime.TryParse(tmp, out dt);
+            DateTime.TryParse(tmp, out DateTime dt);
 
             return dt;
         }

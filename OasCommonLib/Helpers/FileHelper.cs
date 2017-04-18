@@ -90,7 +90,7 @@
                     {
                         if (!replace)
                         {
-                            LastError = string.Format("file '{0}' already exists", to);
+                            LastError = String.Format("file '{0}' already exists", to);
                             return result;
                         }
                         else
@@ -111,7 +111,7 @@
             }
             catch (Exception ex)
             {
-                LastError = string.Format("file copy failed : {0}", ex.Message);
+                LastError = String.Format("file copy failed : {0}", ex.Message);
             }
 
             return result;
@@ -130,9 +130,8 @@
             }
 
             int[] data = new int[6];
-            int i;
 
-            if (!int.TryParse(d[2].Substring(0, 4), out i))
+            if (!int.TryParse(d[2].Substring(0, 4), out int i))
             {
                 return false;
             }
@@ -250,7 +249,7 @@
             }
             catch (Exception ex)
             {
-                LastError = string.Format("error during creating apth '{0}' {1}", path, ex.Message);
+                LastError = String.Format("error during creating apth '{0}' {1}", path, ex.Message);
             }
 
             return res;

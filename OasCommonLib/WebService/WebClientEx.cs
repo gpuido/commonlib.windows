@@ -15,8 +15,7 @@
         protected override WebRequest GetWebRequest(Uri address)
         {
             WebRequest r = base.GetWebRequest(address);
-            var request = r as HttpWebRequest;
-            if (request != null)
+            if (r is HttpWebRequest request)
             {
                 request.CookieContainer = container;
             }
@@ -39,8 +38,7 @@
 
         private void ReadCookies(WebResponse r)
         {
-            var response = r as HttpWebResponse;
-            if (response != null)
+            if (r is HttpWebResponse response)
             {
                 CookieCollection cookies = response.Cookies;
                 container.Add(cookies);

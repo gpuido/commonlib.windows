@@ -25,8 +25,8 @@
             {
                 aid.Id = jt["id"].Value<int>();
                 aid.Name = jt["type_name"].Value<string>();
-                aid.Enabled = jt["enabled"].Value<bool>();
-                aid.MiltyReference = jt["multi_reference"].Value<bool>();
+                aid.Enabled = jt["enabled"].Value<int>() != 0;
+                aid.MiltyReference = jt["multi_reference"].Value<int>() != 0;
 
                 if (null != jt["date"])
                 {

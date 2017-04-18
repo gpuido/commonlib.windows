@@ -45,7 +45,7 @@
         /// <returns></returns>
         public static string GetFullInfo()
         {
-            return string.Format(
+            return String.Format(
                 "Microsoft {0}, Version : {1}, SP : {2}, Type : {3}",
                 GetOSName(),
                 OSVersion,
@@ -159,10 +159,10 @@
         /// <returns>A string containing the the operating system service pack information.</returns>
         public static string GetOSServicePack()
         {
-            OSVERSIONINFOEX osVersionInfo = new OSVERSIONINFOEX();
-
-            osVersionInfo.dwOSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFOEX));
-
+            var osVersionInfo = new OSVERSIONINFOEX()
+            {
+                dwOSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFOEX))
+            };
             if (!GetVersionEx(ref osVersionInfo))
             {
                 return "";

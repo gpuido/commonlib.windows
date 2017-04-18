@@ -143,9 +143,8 @@ namespace OasCommonLib.Helpers
 
         public static TimeZoneInfo OlsonTimeZoneToTimeZoneInfo(string olsonTimeZoneId)
         {
-            var windowsTimeZoneId = default(string);
             var windowsTimeZone = default(TimeZoneInfo);
-            if (_olsonWindowsTimes.TryGetValue(olsonTimeZoneId, out windowsTimeZoneId))
+            if (_olsonWindowsTimes.TryGetValue(olsonTimeZoneId, out string windowsTimeZoneId))
             {
                 try { windowsTimeZone = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZoneId); }
                 catch (TimeZoneNotFoundException) { }
@@ -155,8 +154,7 @@ namespace OasCommonLib.Helpers
         }
         public static string GetTimeZone(string olsonTimeZone)
         {
-            string windowsTimeZoneId = null;
-            _olsonWindowsTimes.TryGetValue(olsonTimeZone, out windowsTimeZoneId);
+            _olsonWindowsTimes.TryGetValue(olsonTimeZone, out string windowsTimeZoneId);
             return windowsTimeZoneId;
         }
     }

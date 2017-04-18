@@ -34,12 +34,13 @@
                     string make = j["makeName"].Value<string>();
                     string model = j["modelName"].Value<string>();
 
-                    VinInfo vi = new VinInfo();
-                    vi.Vin = Vin;
-                    vi.Year = year;
-                    vi.Model = model;
-                    vi.Make = make;
-
+                    var vi = new VinInfo()
+                    {
+                        Vin = Vin,
+                        Year = year,
+                        Model = model,
+                        Make = make
+                    };
                     return vi;
                 }
             }

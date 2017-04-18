@@ -52,9 +52,7 @@
                         }
                         else if (29 == variableId)
                         {
-                            int year;
-
-                            if (int.TryParse(value, out year))
+                            if (int.TryParse(value, out int year))
                             {
                                 vi.Year = year;
                             }

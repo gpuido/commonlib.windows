@@ -64,10 +64,7 @@
 
             try
             {
-                string json;
-                string session;
-
-                if (WebServiceCall.Login(login, passwd, out session, out json))
+                if (WebServiceCall.Login(login, passwd, out string session, out string json))
                 {
                     if (saveSession)
                     {

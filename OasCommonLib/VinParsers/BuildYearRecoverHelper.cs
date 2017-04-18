@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OasCommonLib.VinParsers
+﻿namespace OasCommonLib.VinParsers
 {
+    using System;
+
     public sealed class BuildYearRecoverHelper
     {
         public static int Recover(string buildString)
         {
-            int build;
-
-
-            if (!int.TryParse(buildString, out build))
+            if (!int.TryParse(buildString, out int build))
             {
                 build = 2000;
             }

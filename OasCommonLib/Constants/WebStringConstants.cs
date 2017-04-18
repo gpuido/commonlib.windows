@@ -3,7 +3,7 @@
     public sealed class WebStringConstants
     {
         public static readonly string ENVELOPE_ID = "envelope_id";
-        public static readonly string ENV_ID_LIST = "env_id_list";
+        public static readonly string ENV_LIST = "env_list";
         public static readonly string DB_REFERENCE = "db_reference";
         public static readonly string REFERENCE = "reference";
         public static readonly string INFO_TYPE = "info_type";
