@@ -81,6 +81,7 @@
     <Compile Include="Config\IConfigData.cs" />
     <Compile Include="Config\OasConfig.cs" />
     <Compile Include="Constants\JsonStringConstants.cs" />
+    <Compile Include="Constants\OasStringConstants.cs" />
     <Compile Include="Constants\WebStringConstants.cs" />
     <Compile Include="Data\AddInfoTypeInfo.cs" />
     <Compile Include="Data\CommonAdditionalInfo.cs" />
@@ -145,7 +146,9 @@
     <Compile Include="WebService\WebServiceCall.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
