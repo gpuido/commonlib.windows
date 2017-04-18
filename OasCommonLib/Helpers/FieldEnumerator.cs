@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System;
+    using OasCommonLib.Constants;
 
     public sealed class FieldEnumerator
     {
@@ -146,7 +147,7 @@
 
         public static string FindField(string index)
         {
-            if (int.TryParse((index ?? " ").Substring(1), out int idx) && idx > 0)
+            if (int.TryParse((index ?? OasStringConstants.Space).Substring(1), out int idx) && idx > 0)
             {
                 return _indecies[idx];
             }

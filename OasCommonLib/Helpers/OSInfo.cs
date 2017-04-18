@@ -1,5 +1,6 @@
 ﻿namespace OasCommonLib.Helpers
 {
+    using OasCommonLib.Constants;
     using System;
     using System.Runtime.InteropServices;
 
@@ -165,11 +166,11 @@
 
             if (!GetVersionEx(ref osVersionInfo))
             {
-                return "";
+                return String.Empty;
             }
             else
             {
-                return " " + osVersionInfo.szCSDVersion;
+                return OasStringConstants.Space + osVersionInfo.szCSDVersion;
             }
         }
 

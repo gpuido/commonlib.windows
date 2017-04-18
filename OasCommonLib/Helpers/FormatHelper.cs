@@ -35,7 +35,7 @@
                 return String.Empty;
             }
 
-            return data.Replace("+", WebStringConstants.Space).Replace("%20", WebStringConstants.Space);
+            return data.Replace(OasStringConstants.Plus, OasStringConstants.Space).Replace("%20", OasStringConstants.Space);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿namespace OasCommonLib.Helpers
 {
     using Logger;
+    using OasCommonLib.Constants;
     using System;
 
     public class UtcHelper
@@ -51,7 +52,7 @@
                 timeZone += l[0];
             }
 
-            return dt.ToString(format) + " " + timeZone;
+            return dt.ToString(format) + OasStringConstants.Space + timeZone;
         }
     }
 }

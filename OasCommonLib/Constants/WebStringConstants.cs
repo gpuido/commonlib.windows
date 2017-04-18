@@ -45,7 +45,5 @@
 
         public static readonly string ENC_DATA = "_d";
         public static readonly string POST = "post";
-
-        public static readonly string Space = " ";
     }
 }
