@@ -1,12 +1,11 @@
 ﻿namespace OasCommonLib.UpdateHelper
 {
-    using Logger;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-    using NUnrar.Archive;
     using Helpers;
     using System;
     using System.IO;
+    using System.IO.Compression;
     using System.Net;
 
     public class NewVersionHelper
@@ -144,7 +143,7 @@
 
             if (DownloadNewVersion())
             {
-                if (UnpackNewVersion())
+                if (UnpackNewVersion(_downloadPath, _archiveName))
                 {
                     return true;
                 }
@@ -210,14 +209,15 @@
             return res;
         }
 
-        private static bool UnpackNewVersion()
+        public static bool UnpackNewVersion(string downloadPath, string archiveName)
         {
             bool res = false;
-            string source = Path.Combine(_downloadPath, _archiveName);
+            string source = Path.Combine(downloadPath, archiveName);
             string destination = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
             int step = 0;
             string stepComment = String.Empty;
 
+            LastError = String.Empty;
             try
             {
                 step = 1;
@@ -235,33 +235,22 @@
                 }
 
                 step = 3;
-                RarArchive archive = RarArchive.Open(source);
+                var archive = ZipFile.OpenRead(source);
 
                 step = 4;
-                foreach (RarArchiveEntry entry in archive.Entries)
+                foreach (var entry in archive.Entries)
                 {
-                    string folder;
-                    if (Path.GetDirectoryName(entry.FilePath).EndsWith("x64"))
+                    if (entry.Length > 0)
                     {
-                        folder = Path.Combine(destination, "x64");
-                    }
-                    else if (Path.GetDirectoryName(entry.FilePath).EndsWith("x86"))
-                    {
-                        folder = Path.Combine(destination, "x86");
-                    }
-                    else
-                    {
-                        folder = destination;
-                    }
+                        var path = Path.Combine(destination, entry.FullName);
+                        var folder = Path.GetDirectoryName(path);
+                        if (!Directory.Exists(folder))
+                        {
+                            FileHelper.CreateDirectoryRecursively(folder);
+                        }
 
-                    if (!Directory.Exists(folder))
-                    {
-                        FileHelper.CreateDirectoryRecursively(folder);
+                        entry.ExtractToFile(path, overwrite: true);
                     }
-
-                    string path = Path.Combine(folder, Path.GetFileName(entry.FilePath));
-
-                    entry.WriteToFile(path, NUnrar.Common.ExtractOptions.Overwrite);
                 }
 
                 step = 5;
