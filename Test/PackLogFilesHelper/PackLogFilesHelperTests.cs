@@ -16,11 +16,9 @@ namespace PackLogFilesHelper
         }
 
         [TestMethod]
-        public void howManyDaysSaveInArchive_Test()
+        public void HowManyDaysSaveInArchive_Test()
         {
-            YearMonthInfo dt;
-
-            var res = PackLogsHelper.HowManyDaysFromNow("2012-01-01.log", out dt);
+            var res = PackLogsHelper.HowManyDaysFromNow("2012-01-01.log", out YearMonthInfo dt);
             Assert.IsTrue(res > 100);
             Assert.AreEqual(dt.Year, 2012);
             Assert.AreEqual(dt.Month, 1);

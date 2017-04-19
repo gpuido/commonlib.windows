@@ -246,3 +246,9 @@ ModelManifest.xml
 /PackLogFilesHelper/logs/2016-10.log.zip
 /PackLogFilesHelper/logs/2011-01.log.zip
 /PackLogFilesHelper/logs
+/Test/PackLogFilesHelper/logs/2016-11.log.zip
+/Test/PackLogFilesHelper/logs/2016-10.log.zip
+/Test/PackLogFilesHelper/logs/2016-11.log.zip
+/Test/PackLogFilesHelper/logs/2016-10.log.zip
+/Test/PackLogFilesHelper/logs/2016-10.log.zip
+*.zip

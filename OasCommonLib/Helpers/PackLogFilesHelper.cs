@@ -1,9 +1,9 @@
 ﻿namespace OasCommonLib.Helpers
 {
-    using ICSharpCode.SharpZipLib.Zip;
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Packaging;
 
     public static class PackLogsHelper
     {
@@ -69,29 +69,47 @@
             return res;
         }
 
-        private static void PackFilesToZip(string logFolder, string yearMonth, List<string> list)
+        private static void PackFilesToZip(string logFolder, string yearMonth, List<string> logList)
         {
-            string zipFilePath = Path.Combine(logFolder, String.Format("{0}.log.zip", yearMonth));
+            string zipFilename = Path.Combine(logFolder, String.Format("{0}.log.zip", yearMonth));
 
-            using (ZipFile z = File.Exists(zipFilePath) ? new ZipFile(zipFilePath) : ZipFile.Create(zipFilePath))
+            using (Package zip = Package.Open(zipFilename, FileMode.OpenOrCreate))
             {
-                z.BeginUpdate();
-
-                foreach (var l in list)
+                foreach (var l in logList)
                 {
-                    z.Add(l);
+                    string destFilename = Path.GetFileName(l);
+                    Uri uri = PackUriHelper.CreatePartUri(new Uri(destFilename, UriKind.Relative));
+                    if (zip.PartExists(uri))
+                    {
+                        zip.DeletePart(uri);
+                    }
+                    PackagePart part = zip.CreatePart(uri, "", CompressionOption.Normal);
+                    using (FileStream fileStream = new FileStream(l, FileMode.Open, FileAccess.Read))
+                    {
+                        using (Stream dest = part.GetStream())
+                        {
+                            CopyStream(fileStream, dest);
+                        }
+                    }
                 }
-
-                z.CommitUpdate();
-                z.Close();
             }
 
-            foreach (var l in list)
-            {
-                File.Delete(l);
-            }
+            logList.ForEach((x) => File.Delete(x));
         }
 
+        private const long BUFFER_SIZE = 4096;
+        private static void CopyStream(FileStream inputStream, Stream outputStream)
+        {
+            long bufferSize = inputStream.Length < BUFFER_SIZE ? inputStream.Length : BUFFER_SIZE;
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead = 0;
+            long bytesWritten = 0;
+            while ((bytesRead = inputStream.Read(buffer, 0, buffer.Length)) != 0)
+            {
+                outputStream.Write(buffer, 0, bytesRead);
+                bytesWritten += bufferSize;
+            }
+        }
         public static int HowManyDaysFromNow(string fileName, out YearMonthInfo logDate)
         {
             int howManyDaysFromNow = 0;
