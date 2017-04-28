@@ -152,7 +152,7 @@ namespace OasCommonLib.WebService
             CookieCollection cc = new CookieCollection();
             int uploadedSize = 0;
 
-            var pathToFile = InfoTypeEnum.AudioNote == cai.InfoType ? ImageHelper.CaseAudioPath(cai.EnvelopeId, cai.FileName) : ImageHelper.CaseImagePath(cai.EnvelopeId, cai.FileName);
+            var pathToFile = AddInfoHelper.CaseAddInfoPath(cai.EnvelopeId, cai.FileName);
 
             Debug.Assert(cai.EnvelopeId > 0);
 
@@ -464,7 +464,7 @@ namespace OasCommonLib.WebService
             CookieCollection cc = new CookieCollection();
             int uploadedSize = 0;
             string uploadType = "upload_image";
-            var pathToFile = InfoTypeEnum.AudioNote == cai.InfoType ? ImageHelper.CaseAudioPath(cai.EnvelopeId, cai.FileName) : ImageHelper.CaseImagePath(cai.EnvelopeId, cai.FileName);
+            var pathToFile = AddInfoHelper.CaseAddInfoPath(cai.EnvelopeId, cai.FileName);
 
             Debug.Assert(cai.EnvelopeId > 0);
 
@@ -1172,21 +1172,6 @@ namespace OasCommonLib.WebService
             return DownloadInfoImage(cai.EnvelopeId, cai.Reference, pathToImage, cai.InfoType);
         }
 
-        public static bool DownloadPrecondition(long envelopeId, long reference, string pathToImage)
-        {
-            return DownloadInfoImage(envelopeId, reference, pathToImage, InfoTypeEnum.Precondition);
-        }
-
-        public static bool DownloadAdditionalInfoImage(long envelopeId, long reference, string pathToImage)
-        {
-            return DownloadInfoImage(envelopeId, reference, pathToImage, InfoTypeEnum.DetailAddInfo);
-        }
-
-        public static bool DownloadSupplementInfoImage(long envelopeId, string pathToImage)
-        {
-            return DownloadInfoImage(envelopeId, -1L, pathToImage, InfoTypeEnum.Supplement);
-        }
-
         public static bool DownloadInfoImage(long envelopeId, long reference, string pathToImage, InfoTypeEnum infoType)
         {
             bool res = false;
@@ -1196,23 +1181,7 @@ namespace OasCommonLib.WebService
             string imageName = Path.GetFileName(pathToImage);
             int stage = 0;
 
-            string downloadAction = "dl";
-
-            switch (infoType)
-            {
-                case InfoTypeEnum.DetailAddInfo:
-                    downloadAction = "dl";
-                    break;
-                case InfoTypeEnum.Precondition:
-                    downloadAction = "dp";
-                    break;
-                case InfoTypeEnum.Supplement:
-                    downloadAction = "ds";
-                    break;
-                case InfoTypeEnum.AudioNote:
-                    downloadAction = "da";
-                    break;
-            }
+            string downloadAction = "dl/" + (int)infoType;
 
             Debug.Assert(envelopeId > 0);
 
@@ -1381,107 +1350,107 @@ namespace OasCommonLib.WebService
             return res;
         }
 
-        public static bool ReadAudioNotes(long envelopeId, out IList<CommonInfo> anList)
-        {
-            bool res = false;
-            string responsebody = String.Empty;
-            NameValueCollection reqparm = new NameValueCollection();
-            CookieContainer cookies = new CookieContainer();
-            CookieCollection cc = new CookieCollection();
+        //public static bool ReadAudioNotes(long envelopeId, out IList<CommonInfo> anList)
+        //{
+        //    bool res = false;
+        //    string responsebody = String.Empty;
+        //    NameValueCollection reqparm = new NameValueCollection();
+        //    CookieContainer cookies = new CookieContainer();
+        //    CookieCollection cc = new CookieCollection();
 
-            anList = null;
-            LastError = String.Empty;
+        //    anList = null;
+        //    LastError = String.Empty;
 
-            SessionInfo sessionInfo = SessionInfo.Instance;
-            if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
-            {
-                LastError = "no session info found in 'read_audioinfo'";
-                return res;
-            }
+        //    SessionInfo sessionInfo = SessionInfo.Instance;
+        //    if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
+        //    {
+        //        LastError = "no session info found in 'read_audioinfo'";
+        //        return res;
+        //    }
 
-            if (!_cfg.EncodeTraffic)
-            {
-                reqparm.Add(WebStringConstants.ACTION, "read_audioinfo");
-                reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
-                reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
-            }
-            else
-            {
-                string data = ActionParametersHelper.GenerateParameters("read_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
-                {
-                    new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, envelopeId)
-                });
-                reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
-            }
+        //    if (!_cfg.EncodeTraffic)
+        //    {
+        //        reqparm.Add(WebStringConstants.ACTION, "read_audioinfo");
+        //        reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
+        //        reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
+        //    }
+        //    else
+        //    {
+        //        string data = ActionParametersHelper.GenerateParameters("read_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
+        //        {
+        //            new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, envelopeId)
+        //        });
+        //        reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
+        //    }
 
-            cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
-            cookies.Add(cc);
-            try
-            {
-                using (WebClientEx client = new WebClientEx(cookies))
-                {
-                    byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
-                    responsebody = Encoding.UTF8.GetString(responsebytes);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                LastError = "failed in read_audioinfo :" + ex.Message;
-                return false;
-            }
+        //    cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
+        //    cookies.Add(cc);
+        //    try
+        //    {
+        //        using (WebClientEx client = new WebClientEx(cookies))
+        //        {
+        //            byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
+        //            responsebody = Encoding.UTF8.GetString(responsebytes);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
+        //        LastError = "failed in read_audioinfo :" + ex.Message;
+        //        return false;
+        //    }
 
-            JObject jObj = JObject.Parse(responsebody);
+        //    JObject jObj = JObject.Parse(responsebody);
 
-            if (null != jObj[WebStringConstants.ENC_DATA])
-            {
-                string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
-                responsebody = CoderHelper.Decode(encodedResponse);
+        //    if (null != jObj[WebStringConstants.ENC_DATA])
+        //    {
+        //        string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
+        //        responsebody = CoderHelper.Decode(encodedResponse);
 
-                jObj = JObject.Parse(responsebody);
-            }
+        //        jObj = JObject.Parse(responsebody);
+        //    }
 
-            if (null != jObj[JsonStringConstants.ERROR])
-            {
-                LastError = "failed in read_audioinfo :" + jObj[JsonStringConstants.ERROR].Value<string>();
-                return res;
-            }
+        //    if (null != jObj[JsonStringConstants.ERROR])
+        //    {
+        //        LastError = "failed in read_audioinfo :" + jObj[JsonStringConstants.ERROR].Value<string>();
+        //        return res;
+        //    }
 
-            if (null != jObj[JsonStringConstants.RESULT])
-            {
-                anList = new List<CommonInfo>();
+        //    if (null != jObj[JsonStringConstants.RESULT])
+        //    {
+        //        anList = new List<CommonInfo>();
 
-                var result = jObj[JsonStringConstants.RESULT];
-                DateTime updated;
+        //        var result = jObj[JsonStringConstants.RESULT];
+        //        DateTime updated;
 
-                foreach (var d in result["data"])
-                {
-                    try
-                    {
-                        updated = d["updated"].Value<DateTime>();
-                    }
-                    catch
-                    {
-                        Debug.Fail("failed to parse string date " + d["updated"].Value<string>());
-                        updated = DateTime.UtcNow;
-                    }
+        //        foreach (var d in result["data"])
+        //        {
+        //            try
+        //            {
+        //                updated = d["updated"].Value<DateTime>();
+        //            }
+        //            catch
+        //            {
+        //                Debug.Fail("failed to parse string date " + d["updated"].Value<string>());
+        //                updated = DateTime.UtcNow;
+        //            }
 
-                    anList.Add(new CommonInfo()
-                    {
-                        Id = d[JsonStringConstants.ID].Value<long>(),
-                        FileName = d["file_name"].Value<string>(),
-                        Updated = updated,
-                        TZ = d["tz"].Value<string>(),
-                        ProofStamp = d["proof"].Value<string>(),
-                        UserId = d["user_id"].Value<long>(),
-                    });
-                }
+        //            anList.Add(new CommonInfo()
+        //            {
+        //                Id = d[JsonStringConstants.ID].Value<long>(),
+        //                FileName = d["file_name"].Value<string>(),
+        //                Updated = updated,
+        //                TZ = d["tz"].Value<string>(),
+        //                ProofStamp = d["proof"].Value<string>(),
+        //                UserId = d["user_id"].Value<long>(),
+        //            });
+        //        }
 
-                res = true;
-            }
+        //        res = true;
+        //    }
 
-            return res;
-        }
+        //    return res;
+        //}
 
         public static bool RemoveCommonAdditionalInfo(CommonAdditionalInfo cai)
         {
@@ -1758,14 +1727,7 @@ namespace OasCommonLib.WebService
                     {
                         foreach (var c in preconds)
                         {
-                            cfgPreconds.Add(new PreconditionInfo()
-                            {
-                                CompanyId = c["company_id"].Value<long>(),
-                                Index = c["idx"].Value<int>(),
-                                Code = c["code"].Value<string>(),
-                                Description = c["description"].Value<string>(),
-                                PicturesToTake = c["pictures_to_take"].Value<int>()
-                            });
+                            cfgPreconds.Add(PreconditionInfo.Parse(c));
                         }
                     }
 
@@ -1774,7 +1736,15 @@ namespace OasCommonLib.WebService
                     {
                         foreach (var ait in aiTypes)
                         {
-                            aitList.Add(AddInfoTypeInfo.Parse(ait));
+                            if (AddInfoTypeInfo.Parse(ait, out AddInfoTypeInfo aid))
+                            {
+                                aitList.Add(aid);
+                            }
+                            else
+                            {
+                                LastError = AddInfoTypeInfo.LastError;
+                                return false;
+                            }
                         }
                     }
 

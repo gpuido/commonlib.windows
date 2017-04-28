@@ -42,8 +42,8 @@
 
         public static bool Clear(long envelopeId, CommonInfo ai)
         {
-            string src = ImageHelper.CaseImagePath(envelopeId, ai.FileName);
-            string dst = ImageHelper.ImagePath(ai.FileName);
+            string src = AddInfoHelper.CaseAddInfoPath(envelopeId, ai.FileName);
+            string dst = AddInfoHelper.ImagePath(ai.FileName);
 
             LastError = String.Empty;
 

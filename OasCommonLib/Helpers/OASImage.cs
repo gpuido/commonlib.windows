@@ -128,8 +128,8 @@
         {
             int removedImages = 0;
 
-            var caseFolder = ImageHelper.CaseImageFolder(envelopeId);
-            var imageList = GetImageList(caseFolder, _cfg.ImageExts).Select(x => new CaseImage(ImageHelper.CaseImagePath(envelopeId, x.FileName))).ToList();
+            var caseFolder = AddInfoHelper.CaseAddInfoFolder(envelopeId);
+            var imageList = GetImageList(caseFolder, _cfg.ImageExts).Select(x => new CaseImage(AddInfoHelper.CaseAddInfoPath(envelopeId, x.FileName))).ToList();
             foreach (var il in imageList)
             {
                 if (il.Image.StartsWith(caseName))
@@ -142,7 +142,7 @@
             {
                 if (!il.Found)
                 {
-                    if (FileHelper.DeleteFile(ImageHelper.CaseImagePath(envelopeId, il.Image)))
+                    if (FileHelper.DeleteFile(AddInfoHelper.CaseAddInfoPath(envelopeId, il.Image)))
                     {
                         ++removedImages;
                     }

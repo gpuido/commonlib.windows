@@ -100,7 +100,7 @@
     <Compile Include="Helpers\FieldEnumerator.cs" />
     <Compile Include="Helpers\FileHelper.cs" />
     <Compile Include="Helpers\FormatHelper.cs" />
-    <Compile Include="Helpers\ImageHelper.cs" />
+    <Compile Include="Helpers\AddInfoHelper.cs" />
     <Compile Include="Helpers\JsonHelper.cs" />
     <Compile Include="Helpers\NewVersionHelper.cs" />
     <Compile Include="Helpers\OASImage.cs" />
