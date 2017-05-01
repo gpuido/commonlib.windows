@@ -463,35 +463,13 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
             int uploadedSize = 0;
-            string uploadType = "upload_image";
+            string uploadType = "upload_addinfo";
             var pathToFile = AddInfoHelper.CaseAddInfoPath(cai.EnvelopeId, cai.FileName);
 
             Debug.Assert(cai.EnvelopeId > 0);
 
             LastError = String.Empty;
             uploadedId = 0L;
-
-            switch (cai.InfoType)
-            {
-                case InfoTypeEnum.DetailAddInfo:
-                    uploadType = "upload_image";
-                    break;
-                case InfoTypeEnum.Precondition:
-                    uploadType = "upload_precondition";
-                    break;
-                case InfoTypeEnum.Supplement:
-                    uploadType = "upload_suppliment";
-                    cai.Reference = 0L;
-                    break;
-                case InfoTypeEnum.AudioNote:
-                    uploadType = "upload_audio";
-                    cai.Reference = 0L;
-                    break;
-                default:
-                    Debug.Fail("unsupported upload type");
-                    break;
-            }
-
 
             SessionInfo sessionInfo = SessionInfo.Instance;
             if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
@@ -511,6 +489,7 @@ namespace OasCommonLib.WebService
                 { WebStringConstants.ACTION, uploadType },
                 { WebStringConstants.CLIENT, ClientInfo },
                 { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
+                { WebStringConstants.INFO_TYPE, cai.InfoType.ToString() },
                 { WebStringConstants.TZ, cai.TZ },
                 { WebStringConstants.PROOF, cai.ProofStamp },
                 { "filename", cai.FileName },
