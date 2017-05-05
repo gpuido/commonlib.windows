@@ -489,7 +489,7 @@ namespace OasCommonLib.WebService
                 { WebStringConstants.ACTION, uploadType },
                 { WebStringConstants.CLIENT, ClientInfo },
                 { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
-                { WebStringConstants.INFO_TYPE, cai.InfoType.ToString() },
+                { WebStringConstants.INFO_TYPE, ((int)cai.InfoType).ToString() },
                 { WebStringConstants.TZ, cai.TZ },
                 { WebStringConstants.PROOF, cai.ProofStamp },
                 { "filename", cai.FileName },

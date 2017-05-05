@@ -14,7 +14,7 @@
         public string Name { get; set; }
         public bool Enabled { get; set; }
         public DateTime Created { get; set; }
-        public bool MiltyReference { get; set; }
+        public bool MultiReference { get; set; }
         public int Export { get; set; }
 
         public static string LastError { get; private set; }
@@ -31,7 +31,7 @@
                 aid.Name = jt["type_name"].Value<string>();
                 aid.Enabled = jt["enabled"].Value<int>() != 0;
                 aid.Export= jt["export"].Value<int>();
-                aid.MiltyReference = jt["multi_reference"].Value<int>() != 0;
+                aid.MultiReference = jt["multi_reference"].Value<int>() != 0;
 
                 if (null != jt["date"])
                 {
