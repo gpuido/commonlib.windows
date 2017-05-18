@@ -153,6 +153,8 @@ namespace OasCommonLib.Config
     {
         // web service url
         public string Url;
+        // web upload/download throtteling speed
+        public int ThrottleSpeed;
         // encrypted login & password for auto login
         public string LoginInfo;
 
@@ -163,6 +165,7 @@ namespace OasCommonLib.Config
 #else
             Url = @"http://estvis.com/cgi-bin/oaservice.cgi";
 #endif
+            ThrottleSpeed = 0;
             LoginInfo = String.Empty;
         }
 
@@ -178,6 +181,12 @@ namespace OasCommonLib.Config
             if (null != jt)
             {
                 LoginInfo = jt.Value<string>();
+            }
+
+            jt = webConfig["ThrottleSpeed"];
+            if (null != jt)
+            {
+                ThrottleSpeed = jt.Value<int>();
             }
         }
     }
@@ -983,6 +992,22 @@ namespace OasCommonLib.Config
                 {
                     Data.CaseConfig.ImageExts = value;
                     _oasEvent.RaiseEvent(OasEventType.ImagePathCahnged);
+                }
+            }
+        }
+
+        public int ThrottleSpeed
+        {
+            get
+            {
+                return Data.WebConfig.ThrottleSpeed;
+            }
+            set
+            {
+                if (Data.WebConfig.ThrottleSpeed != value)
+                {
+                    Data.WebConfig.ThrottleSpeed = value;
+                    Save();
                 }
             }
         }

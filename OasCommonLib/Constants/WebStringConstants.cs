@@ -32,6 +32,7 @@
         public static readonly string ARRIVAL_TYPE = "arrival_type";
         public static readonly string VEH_ACTION = "veh_action";
         public static readonly string NOTE = "note";
+        public static readonly string USER_ID = "user_id";
 
         public static readonly string ACTION = "action";
         public static readonly string CLIENT = "client";
@@ -40,10 +41,12 @@
         public static readonly string CASE_NAME = "case_name";
         public static readonly string INSURANCE_GRP_ID = "ins_grp_id";
         public static readonly string ASSIGNED_COMPANY_ID = "assigned_company_id";
+        public static readonly string COMMON_INFO = "common_info";
 
         public static readonly string CASE_OWNER_ID = "case_owner_id";
 
         public static readonly string ENC_DATA = "_d";
         public static readonly string POST = "post";
+
     }
 }

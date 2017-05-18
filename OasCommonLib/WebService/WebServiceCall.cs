@@ -177,8 +177,8 @@ namespace OasCommonLib.WebService
                 { WebStringConstants.ACTION, "upload_file_info" },
                 { WebStringConstants.CLIENT, ClientInfo },
                 { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
-                { "reference", cai.Reference.ToString() },
-                { "info_type", ((int)cai.InfoType).ToString() },
+                { WebStringConstants.REFERENCE, cai.Reference.ToString() },
+                { WebStringConstants.INFO_TYPE, ((int)cai.InfoType).ToString() },
                 { "ci", cai.ToJson() },
                 { "filename", cai.FileName }
             };
@@ -203,8 +203,7 @@ namespace OasCommonLib.WebService
             DateTime start = DateTime.Now;
             long totalBytes = 0L;
 #endif
-            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), 8192))
-            //            using (Stream rs = request.GetRequestStream())
+            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
@@ -235,7 +234,7 @@ namespace OasCommonLib.WebService
 #endif
                 using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
                 {
-                    byte[] buffer = new byte[8192];
+                    var buffer = new byte[8192];
                     int bytesRead = 0;
                     while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
                     {
@@ -246,7 +245,7 @@ namespace OasCommonLib.WebService
                     }
                     fileStream.Close();
                 }
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                var trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
                 rs.Write(trailer, 0, trailer.Length);
 #if DEBUG
                 totalBytes += trailer.Length;
@@ -340,8 +339,8 @@ namespace OasCommonLib.WebService
                 { WebStringConstants.ACTION, "upload_add_info" },
                 { WebStringConstants.CLIENT, ClientInfo },
                 { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
-                { "reference", cai.Reference.ToString() },
-                { "info_type", ((int)cai.InfoType).ToString() },
+                { WebStringConstants.REFERENCE, cai.Reference.ToString() },
+                { WebStringConstants.INFO_TYPE, ((int)cai.InfoType).ToString() },
                 { "ci", cai.ToJson() }
             };
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
@@ -365,7 +364,7 @@ namespace OasCommonLib.WebService
             DateTime start = DateTime.Now;
             long totalBytes = 0L;
 #endif
-            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), 8192))
+            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
             //            using (Stream rs = request.GetRequestStream())
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
@@ -493,8 +492,8 @@ namespace OasCommonLib.WebService
                 { WebStringConstants.TZ, cai.TZ },
                 { WebStringConstants.PROOF, cai.ProofStamp },
                 { "filename", cai.FileName },
-                { "user_id", cai.UserId.ToString() },
-                { WebStringConstants.DB_REFERENCE, cai.Reference.ToString()}
+                { WebStringConstants.USER_ID, cai.UserId.ToString() },
+                { WebStringConstants.REFERENCE, cai.Reference.ToString()}
         };
 
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
@@ -514,7 +513,7 @@ namespace OasCommonLib.WebService
             cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             request.CookieContainer.Add(cc);
 
-            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), 8192))
+            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
@@ -1148,10 +1147,10 @@ namespace OasCommonLib.WebService
             {
                 return true;
             }
-            return DownloadInfoImage(cai.EnvelopeId, cai.Reference, pathToImage, cai.InfoType);
+            return DownloadAddInfoImage(cai.EnvelopeId, cai.Reference, cai.InfoType, pathToImage);
         }
 
-        public static bool DownloadInfoImage(long envelopeId, long reference, string pathToImage, InfoTypeEnum infoType)
+        public static bool DownloadAddInfoImage(long envelopeId, long reference, InfoTypeEnum infoType, string pathToImage)
         {
             bool res = false;
             string downloadUrl;
@@ -1170,15 +1169,7 @@ namespace OasCommonLib.WebService
             }
 
             LastError = String.Empty;
-            string requestParameters;
-            if (reference > 0L)
-            {
-                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + reference.ToString() + "/" + imageName;
-            }
-            else
-            {
-                requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + imageName;
-            }
+            string requestParameters = downloadAction + "/" + envelopeId.ToString() + "/" + reference.ToString() + "/" + imageName;
 
             if (!_cfg.EncodeTraffic)
             {
@@ -1239,197 +1230,6 @@ namespace OasCommonLib.WebService
             }
             return res;
         }
-        #endregion
-
-        #region audio 
-        public static bool DownloadAudio(long envelopeId, string caseAudioName)
-        {
-            bool res = false;
-            string downloadUrl;
-            SessionInfo sessionInfo = SessionInfo.Instance;
-            string DataServiceUrl = _cfg.DataServiceUrl;
-            string audioName = Path.GetFileName(caseAudioName);
-
-            if (!DataServiceUrl.EndsWith("/"))
-            {
-                DataServiceUrl += "/";
-            }
-
-            LastError = String.Empty;
-            string requestParameters = "da/" + envelopeId.ToString() + "/" + audioName;
-
-            if (!_cfg.EncodeTraffic)
-            {
-                downloadUrl = DataServiceUrl + requestParameters;
-            }
-            else
-            {
-                downloadUrl = DataServiceUrl + WebStringConstants.ENC_DATA + CoderHelper.Encode(requestParameters);
-            }
-
-            try
-            {
-                using (WebClient wc = new WebClient())
-                {
-                    wc.DownloadFile(downloadUrl, caseAudioName);
-                }
-
-                if (FileHelper.Exists(caseAudioName))
-                {
-                    string text = File.ReadAllText(caseAudioName);
-                    JObject jObj = JObject.Parse(text);
-
-                    if (null != jObj[WebStringConstants.ENC_DATA])
-                    {
-                        string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
-                        text = CoderHelper.Decode(encodedResponse);
-
-                        jObj = JObject.Parse(text);
-                    }
-
-                    if (null != jObj[JsonStringConstants.ERROR])
-                    {
-                        LastError = "server download failed : " + jObj[JsonStringConstants.ERROR].Value<string>();
-                    }
-                    else
-                    {
-                        res = true;
-                    }
-                }
-            }
-            catch (JsonException jre)
-            {
-                LastError = "server download failed : " + jre.Message + Environment.NewLine + jre.StackTrace;
-                Debug.Fail(LastError);
-            }
-            catch (Exception ex)
-            {
-                LastError = "server download failed : " + ex.Message + Environment.NewLine + ex.StackTrace;
-                Debug.Fail(LastError);
-            }
-
-            return res;
-        }
-
-        public static bool UploadAudio(CommonAdditionalInfo cai, out long uploadedId)
-        {
-            uploadedId = 0L;
-
-            bool res = WebServiceCall.UploadFile(cai, out long uId);
-
-            if (res)
-            {
-                uploadedId = uId;
-            }
-            else
-            {
-                LastError = WebServiceCall.LastError;
-            }
-
-            return res;
-        }
-
-        //public static bool ReadAudioNotes(long envelopeId, out IList<CommonInfo> anList)
-        //{
-        //    bool res = false;
-        //    string responsebody = String.Empty;
-        //    NameValueCollection reqparm = new NameValueCollection();
-        //    CookieContainer cookies = new CookieContainer();
-        //    CookieCollection cc = new CookieCollection();
-
-        //    anList = null;
-        //    LastError = String.Empty;
-
-        //    SessionInfo sessionInfo = SessionInfo.Instance;
-        //    if (null == sessionInfo || string.IsNullOrEmpty(sessionInfo.SessionId))
-        //    {
-        //        LastError = "no session info found in 'read_audioinfo'";
-        //        return res;
-        //    }
-
-        //    if (!_cfg.EncodeTraffic)
-        //    {
-        //        reqparm.Add(WebStringConstants.ACTION, "read_audioinfo");
-        //        reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
-        //        reqparm.Add(WebStringConstants.ENVELOPE_ID, envelopeId.ToString());
-        //    }
-        //    else
-        //    {
-        //        string data = ActionParametersHelper.GenerateParameters("read_audioinfo", ClientInfo, new List<KeyValuePair<string, object>>()
-        //        {
-        //            new KeyValuePair<string, object>(WebStringConstants.ENVELOPE_ID, envelopeId)
-        //        });
-        //        reqparm.Add(WebStringConstants.ENC_DATA, CoderHelper.Encode(data));
-        //    }
-
-        //    cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", WebServiceCall.CookieDomain));
-        //    cookies.Add(cc);
-        //    try
-        //    {
-        //        using (WebClientEx client = new WebClientEx(cookies))
-        //        {
-        //            byte[] responsebytes = client.UploadValues(_cfg.DataServiceUrl, WebStringConstants.POST, reqparm);
-        //            responsebody = Encoding.UTF8.GetString(responsebytes);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-        //        LastError = "failed in read_audioinfo :" + ex.Message;
-        //        return false;
-        //    }
-
-        //    JObject jObj = JObject.Parse(responsebody);
-
-        //    if (null != jObj[WebStringConstants.ENC_DATA])
-        //    {
-        //        string encodedResponse = jObj[WebStringConstants.ENC_DATA].Value<string>();
-        //        responsebody = CoderHelper.Decode(encodedResponse);
-
-        //        jObj = JObject.Parse(responsebody);
-        //    }
-
-        //    if (null != jObj[JsonStringConstants.ERROR])
-        //    {
-        //        LastError = "failed in read_audioinfo :" + jObj[JsonStringConstants.ERROR].Value<string>();
-        //        return res;
-        //    }
-
-        //    if (null != jObj[JsonStringConstants.RESULT])
-        //    {
-        //        anList = new List<CommonInfo>();
-
-        //        var result = jObj[JsonStringConstants.RESULT];
-        //        DateTime updated;
-
-        //        foreach (var d in result["data"])
-        //        {
-        //            try
-        //            {
-        //                updated = d["updated"].Value<DateTime>();
-        //            }
-        //            catch
-        //            {
-        //                Debug.Fail("failed to parse string date " + d["updated"].Value<string>());
-        //                updated = DateTime.UtcNow;
-        //            }
-
-        //            anList.Add(new CommonInfo()
-        //            {
-        //                Id = d[JsonStringConstants.ID].Value<long>(),
-        //                FileName = d["file_name"].Value<string>(),
-        //                Updated = updated,
-        //                TZ = d["tz"].Value<string>(),
-        //                ProofStamp = d["proof"].Value<string>(),
-        //                UserId = d["user_id"].Value<long>(),
-        //            });
-        //        }
-
-        //        res = true;
-        //    }
-
-        //    return res;
-        //}
 
         public static bool RemoveCommonAdditionalInfo(CommonAdditionalInfo cai)
         {
