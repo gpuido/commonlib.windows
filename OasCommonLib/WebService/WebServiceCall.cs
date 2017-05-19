@@ -187,6 +187,7 @@ namespace OasCommonLib.WebService
             byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
+            request.Timeout = 15 * 60 * 1000;
             request.ContentType = "multipart/form-data; boundary=" + boundary;
             request.Method = WebStringConstants.POST;
             request.KeepAlive = true;
@@ -207,6 +208,8 @@ namespace OasCommonLib.WebService
             //            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
             using (Stream rs = request.GetRequestStream())
             {
+                rs.WriteTimeout = 15 * 60 * 1000;
+
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
                 {
@@ -355,6 +358,7 @@ namespace OasCommonLib.WebService
             byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
+            request.Timeout = 15 * 60 * 1000;
             request.ContentType = "multipart/form-data; boundary=" + boundary;
             request.Method = WebStringConstants.POST;
             request.KeepAlive = true;
@@ -375,6 +379,8 @@ namespace OasCommonLib.WebService
             //using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
             using (Stream rs = request.GetRequestStream())
             {
+                rs.WriteTimeout = 15 * 60 * 1000;
+
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
                 {
@@ -508,6 +514,7 @@ namespace OasCommonLib.WebService
             byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_cfg.DataServiceUrl);
+            request.Timeout = 15 * 60 * 1000;
             request.ContentType = "multipart/form-data; boundary=" + boundary;
             request.Method = WebStringConstants.POST;
             request.KeepAlive = true;
@@ -522,8 +529,10 @@ namespace OasCommonLib.WebService
             request.CookieContainer.Add(cc);
 
             //using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
-            using (Stream rs = request.GetRequestStream())
+            using (var rs = request.GetRequestStream())
             {
+                rs.WriteTimeout = 15 * 60 * 1000;
+
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
                 {
@@ -563,9 +572,9 @@ namespace OasCommonLib.WebService
             {
                 using (WebResponse wresp = request.GetResponse())
                 {
-                    using (Stream stream2 = wresp.GetResponseStream())
+                    using (var stream2 = wresp.GetResponseStream())
                     {
-                        using (StreamReader reader2 = new StreamReader(stream2))
+                        using (var reader2 = new StreamReader(stream2))
                         {
                             responsebody = reader2.ReadToEnd();
                             reader2.Close();
