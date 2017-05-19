@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace OasCommonLib.WebService
 {
@@ -203,7 +204,8 @@ namespace OasCommonLib.WebService
             DateTime start = DateTime.Now;
             long totalBytes = 0L;
 #endif
-            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
+            //            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
+            using (Stream rs = request.GetRequestStream())
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
@@ -232,9 +234,10 @@ namespace OasCommonLib.WebService
 #if DEBUG
                 totalBytes += headerbytes.Length;
 #endif
+                var bufferSize = 0 == _cfg.ThrottleSpeed ? 8192 : _cfg.ThrottleSpeed;
                 using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
                 {
-                    var buffer = new byte[8192];
+                    var buffer = new byte[bufferSize];
                     int bytesRead = 0;
                     while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
                     {
@@ -242,6 +245,10 @@ namespace OasCommonLib.WebService
 #if DEBUG
                         totalBytes += bytesRead;
 #endif
+                    }
+                    if (0 != _cfg.ThrottleSpeed)
+                    {
+                        Thread.Sleep(500);
                     }
                     fileStream.Close();
                 }
@@ -314,6 +321,7 @@ namespace OasCommonLib.WebService
             return res;
         }
 
+        // todo: rebuild post multipart to regular one and try to remove this function
         public static bool UploadCommonAdditionalInfo(CommonAdditionalInfo cai, out long uploadedId)
         {
             bool res = false;
@@ -364,8 +372,8 @@ namespace OasCommonLib.WebService
             DateTime start = DateTime.Now;
             long totalBytes = 0L;
 #endif
-            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
-            //            using (Stream rs = request.GetRequestStream())
+            //using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
+            using (Stream rs = request.GetRequestStream())
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
@@ -462,7 +470,7 @@ namespace OasCommonLib.WebService
             CookieContainer cookies = new CookieContainer();
             CookieCollection cc = new CookieCollection();
             int uploadedSize = 0;
-            string uploadType = "upload_addinfo";
+            string action = "upload_addinfo";
             var pathToFile = AddInfoHelper.CaseAddInfoPath(cai.EnvelopeId, cai.FileName);
 
             Debug.Assert(cai.EnvelopeId > 0);
@@ -485,7 +493,7 @@ namespace OasCommonLib.WebService
 
             var nvc = new NameValueCollection
             {
-                { WebStringConstants.ACTION, uploadType },
+                { WebStringConstants.ACTION, action },
                 { WebStringConstants.CLIENT, ClientInfo },
                 { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
                 { WebStringConstants.INFO_TYPE, ((int)cai.InfoType).ToString() },
@@ -494,7 +502,7 @@ namespace OasCommonLib.WebService
                 { "filename", cai.FileName },
                 { WebStringConstants.USER_ID, cai.UserId.ToString() },
                 { WebStringConstants.REFERENCE, cai.Reference.ToString()}
-        };
+            };
 
             string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
             byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
@@ -513,7 +521,8 @@ namespace OasCommonLib.WebService
             cc.Add(new Cookie(WebStringConstants.SESSION, sessionInfo.SessionId, "/", CookieDomain));
             request.CookieContainer.Add(cc);
 
-            using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
+            //using (ThrottledStream.ThrottledStream rs = new ThrottledStream.ThrottledStream(request.GetRequestStream(), _cfg.ThrottleSpeed))
+            using (Stream rs = request.GetRequestStream())
             {
                 string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
                 foreach (string key in nvc.Keys)
@@ -529,13 +538,19 @@ namespace OasCommonLib.WebService
                 string header = String.Format(headerTemplate, "file", cai.FileName, "application/octet-stream");
                 byte[] headerbytes = Encoding.UTF8.GetBytes(header);
                 rs.Write(headerbytes, 0, headerbytes.Length);
+
+                var bufferSize = 0 == _cfg.ThrottleSpeed ? 8192 : _cfg.ThrottleSpeed;
                 using (FileStream fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
                 {
-                    byte[] buffer = new byte[8192];
+                    byte[] buffer = new byte[bufferSize];
                     int bytesRead = 0;
                     while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
                     {
                         rs.Write(buffer, 0, bytesRead);
+                        if (0 == _cfg.ThrottleSpeed)
+                        {
+                            Thread.Sleep(500);
+                        }
                     }
                     fileStream.Close();
                 }
@@ -1350,7 +1365,7 @@ namespace OasCommonLib.WebService
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                LastError = "check missing images. error : " + ex.Message;
+                LastError = $"check missing images. env_id:{envelopeId} error : " + ex.Message;
                 return false;
             }
 

@@ -17,6 +17,7 @@
             WebRequest r = base.GetWebRequest(address);
             if (r is HttpWebRequest request)
             {
+                request.Timeout = 5 * 60 * 1000;
                 request.CookieContainer = container;
             }
             return r;
