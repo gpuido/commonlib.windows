@@ -479,7 +479,7 @@ namespace OasCommonLib.WebService
             string action = "upload_addinfo";
             var pathToFile = AddInfoHelper.CaseAddInfoPath(cai.EnvelopeId, cai.FileName);
 
-            Debug.Assert(cai.EnvelopeId > 0);
+            Debug.Assert(cai.EnvelopeId >= 0);
 
             LastError = String.Empty;
             uploadedId = 0L;
@@ -1374,7 +1374,7 @@ namespace OasCommonLib.WebService
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                LastError = $"check missing images. env_id:{envelopeId} error : " + ex.Message;
+                LastError = $"read missing images. env_id:{envelopeId} error : " + ex.Message;
                 return false;
             }
 
@@ -1402,7 +1402,7 @@ namespace OasCommonLib.WebService
                             var fileName = ai[JsonStringConstants.FILE_NAME].Value<string>();
                             long id = ai[JsonStringConstants.ID].Value<long>();
                             InfoTypeEnum type = (InfoTypeEnum)ai["type"].Value<int>();
-                            string msg = String.Format("going to upload detail image db_ref:{0}, image:{1}, id :{2}", reference, fileName, id);
+                            string msg = String.Format("going to upload detail image db_ref:{0}, image:{1}, id:{2}", reference, fileName, id);
 
                             var ci = new CommonUploadInfo()
                             {
@@ -1422,12 +1422,12 @@ namespace OasCommonLib.WebService
             catch (JsonReaderException jre)
             {
                 Debug.Fail(jre.Message + Environment.NewLine + jre.StackTrace);
-                LastError = "get latest info failed. error : " + jre.Message;
+                LastError = "read_missing_files failed. error : " + jre.Message;
             }
             catch (Exception ex)
             {
                 Debug.Fail(ex.Message + Environment.NewLine + ex.StackTrace);
-                LastError = "get latest info failed. error : " + ex.Message;
+                LastError = "read_missing_files failed. error : " + ex.Message;
             }
 
             return res;

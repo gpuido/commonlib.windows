@@ -2,7 +2,10 @@
 {
     using Interfaces;
     using Newtonsoft.Json.Linq;
+    using OasCommonLib.Data;
     using System;
+    using System.Linq;
+    using System.Collections.Generic;
     using WebService;
 
     public class SessionInfo : IError
@@ -29,16 +32,12 @@
 
         public string SessionId { get; private set; }
         public int UserId { get; private set; }
-        public int CompanyId { get; private set; }
-        public string CompanyName { get; private set; }
-        public string CompanyAbbr { get; private set; }
         public string UserName { get; private set; }
         public string UserLogin { get; private set; }
-        public string[] Roles { get; private set; }
-        public long InsuranceGroupId { get; private set; }
+        public Dictionary<long, string[]> Roles { get; private set; }
+        public List<CompanyInfo> UserCompanies { get; private set; }
         public string Pin { get; private set; }
 
-        public string CompanyRole { get; private set; }
         public string AuthKey { get; private set; }
 
         public bool HasConnection { get; private set; }
@@ -50,9 +49,9 @@
             SessionId = String.Empty;
             UserId = 0;
             UserName = String.Empty;
-            CompanyName = String.Empty;
             UserLogin = String.Empty;
-            Roles = new string[] { };
+            Roles = new Dictionary<long, string[]>();
+            UserCompanies = new List<CompanyInfo>();
             HasConnection = false;
         }
 
@@ -95,23 +94,60 @@
             JObject jObj = JObject.Parse(json);
             JObject result = (JObject)jObj["result"];
 
-            string[] roles = result["roles"].Value<string>().Split(',');
 
             string userLogin = result["user_login"].Value<string>();
             int companyId = result["company_id"].Value<int>();
-            string companyName = result["company_name"].Value<string>();
-            string companyAbbr = result["company_abbr"].Value<string>();
             int userId = result["user_id"].Value<int>();
             string userName = result["user_name"].Value<string>();
-            string companyRole = result["company_role"].Value<string>();
-            long insGrpId = result["ins_grp_id"].Value<long>();
             string pin = result["pin"].Value<string>();
 
-            si.SetSessionInfo(session, userLogin, companyId, companyName, companyAbbr, userId, userName, roles, companyRole, insGrpId, pin);
+            var companies = ParseUserCompanies((JArray)result["companies"]);
+            var roles = ParseRoles((JArray)result["roles"]);
+
+            si.SetSessionInfo(session, userLogin, userId, userName, pin, companies, roles);
 
             return si;
         }
 
+        private static Dictionary<long, string[]> ParseRoles(JArray jArray)
+        {
+            var roles = new Dictionary<long, string[]>();
+
+            foreach (var jt in jArray)
+            {
+                long companyId = jt["company_id"].Value<long>();
+                var ra = jt["roles"].ToObject<string[]>();
+
+                roles.Add(companyId, ra);
+            }
+
+            return roles;
+        }
+
+        public static List<CompanyInfo> ParseUserCompanies(JArray jArray)
+        {
+            var companies = new List<CompanyInfo>();
+            string name;
+            string role;
+            string abbr;
+            long companyId;
+            int insGrpId;
+            bool isDefault;
+
+            foreach (var jt in jArray)
+            {
+                companyId = jt["company_id"].Value<long>();
+                name = jt["name"].Value<string>();
+                abbr = jt["abbr"].Value<string>();
+                role = jt["role"].Value<string>();
+                insGrpId = jt["ins_grp_id"].Value<int>();
+                isDefault = jt["is_default"].Value<bool>();
+
+                companies.Add(new CompanyInfo(companyId, name, abbr, role, insGrpId, isDefault));
+            }
+
+            return companies;
+        }
 
         public bool SetSessionInfo(string session, string json)
         {
@@ -120,7 +156,7 @@
             try
             {
                 var si = Parse(session, json);
-                SetSessionInfo(session, si.UserLogin, si.CompanyId, si.CompanyName, si.CompanyAbbr, si.UserId, si.UserName, si.Roles, si.CompanyRole, si.InsuranceGroupId, si.Pin);
+                SetSessionInfo(session, si.UserLogin, si.UserId, si.UserName, si.Pin, si.UserCompanies, si.Roles);
 
                 res = true;
             }
@@ -132,19 +168,29 @@
             return res;
         }
 
-        public void SetSessionInfo(string sessionId, string userLogin, int companyId, string companyName, string companyAbbr, int userId, string userName, string[] roles, string companyRole, long insGrpId, string pin)
+        public void SetSessionInfo(string sessionId, string userLogin, int userId, string userName, string pin, List<CompanyInfo> companies, Dictionary<long, string[]> roles)
         {
             UserLogin = userLogin;
             SessionId = sessionId;
             UserId = userId;
             UserName = userName;
-            CompanyId = companyId;
-            CompanyName = companyName;
-            CompanyAbbr = companyAbbr;
-            Roles = roles;
-            CompanyRole = companyRole;
-            InsuranceGroupId = insGrpId;
             Pin = pin;
+
+            UserCompanies = companies;
+            Roles = roles;
+        }
+
+        public bool HasRole(string role)
+        {
+            foreach (var pair in Roles)
+            {
+                if (pair.Value.Contains(role))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
