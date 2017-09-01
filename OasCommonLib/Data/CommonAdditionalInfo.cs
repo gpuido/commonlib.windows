@@ -22,7 +22,6 @@ namespace OasCommonLib.Data
             Note = ci.Note;
             FileMissing = ci.FileMissing;
             ProofStamp = ci.ProofStamp;
-            TZ = ci.TZ;
             UserId = ci.UserId;
         }
 
@@ -46,7 +45,6 @@ namespace OasCommonLib.Data
                 cai.Note = ci.Note;
                 cai.FileMissing = ci.FileMissing;
                 cai.ProofStamp = ci.ProofStamp;
-                cai.TZ = ci.TZ;
                 cai.UserId = ci.UserId;
             }
             catch (Exception ex)

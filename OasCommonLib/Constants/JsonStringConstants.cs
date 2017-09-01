@@ -11,7 +11,6 @@
         public static readonly string ID = "id";
         public static readonly string FILE_NAME = "file_name";
         public static readonly string NOTE = "note";
-        public static readonly string TZ = "tz";
         public static readonly string PROOF = "proof";
         public static readonly string ENVELOPE_ID = "envelope_id";
         public static readonly string REFERENCE = "reference";

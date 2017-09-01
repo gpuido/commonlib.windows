@@ -133,6 +133,7 @@
             long companyId;
             int insGrpId;
             bool isDefault;
+            string companyTimeZone;
 
             foreach (var jt in jArray)
             {
@@ -142,8 +143,9 @@
                 role = jt["role"].Value<string>();
                 insGrpId = jt["ins_grp_id"].Value<int>();
                 isDefault = jt["is_default"].Value<bool>();
+                companyTimeZone = jt["tz"].Value<string>();
 
-                companies.Add(new CompanyInfo(companyId, name, abbr, role, insGrpId, isDefault));
+                companies.Add(new CompanyInfo(companyId, name, abbr, role, insGrpId, isDefault, companyTimeZone));
             }
 
             return companies;

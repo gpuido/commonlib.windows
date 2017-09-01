@@ -503,7 +503,6 @@ namespace OasCommonLib.WebService
                 { WebStringConstants.CLIENT, ClientInfo },
                 { WebStringConstants.ENVELOPE_ID, cai.EnvelopeId.ToString() },
                 { WebStringConstants.INFO_TYPE, ((int)cai.InfoType).ToString() },
-                { WebStringConstants.TZ, cai.TZ },
                 { WebStringConstants.PROOF, cai.ProofStamp },
                 { "filename", cai.FileName },
                 { WebStringConstants.USER_ID, cai.UserId.ToString() },
@@ -710,7 +709,7 @@ namespace OasCommonLib.WebService
 
             if (false && !_cfg.EncodeTraffic)
             {
-                reqparm.Add(WebStringConstants.ACTION, "login");
+                reqparm.Add(WebStringConstants.ACTION, WebStringConstants.LOGIN);
                 reqparm.Add(WebStringConstants.CLIENT, ClientInfo);
                 reqparm.Add(WebStringConstants.LOGIN, login);
                 reqparm.Add(WebStringConstants.PASSWD, passwd);

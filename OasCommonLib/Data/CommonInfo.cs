@@ -14,7 +14,6 @@
         public string Note { get; set; }
         public bool FileMissing { get; set; }
         public string ProofStamp { get; set; }
-        public string TZ { get; set; }
 
         public long UserId { get; set; }
 
@@ -36,8 +35,6 @@
             Updated = DateTime.UtcNow;
             FileMissing = false;
             UserId = 0L;
-
-            TZ = TimeZoneInfo.Local.StandardName;
         }
 
         public static bool Clear(long envelopeId, CommonInfo ai)
@@ -58,7 +55,7 @@
 
         public override string ToString()
         {
-            return String.Format("id:{0}, image:{1}, note:{2}, updated:{3}, tz:{4}, proof:{5}, user_id:{6}", Id, FileName, Note, Updated, TZ, ProofStamp, UserId);
+            return String.Format("id:{0}, image:{1}, note:{2}, updated:{3}, proof:{4}, user_id:{5}", Id, FileName, Note, Updated, ProofStamp, UserId);
         }
 
         public string ToJson()
@@ -80,7 +77,6 @@
             {
                 ci.Id = ai["id"].Value<long>();
                 ci.Note = ai["note"].Value<string>();
-                ci.TZ = ai["tz"].Value<string>();
 
                 if (null != ai["proof"])
                 {

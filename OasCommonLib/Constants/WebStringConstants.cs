@@ -10,7 +10,6 @@
         public static readonly string ID = "id";
         public static readonly string FILE_NAME = "file_name";
         public static readonly string DAYS = "days";
-        public static readonly string TZ = "tz";
         public static readonly string PROOF = "proof";
         public static readonly string LOGIN = "login";
         public static readonly string PASSWD = "passwd";
